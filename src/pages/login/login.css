@@ -1,0 +1,346 @@
+/* =============================================================================
+   Tela de Login - Estilos isolados
+   -----------------------------------------------------------------------------
+   - Design tokens (cores, sombras, etc.)
+   - Layout de fundo (orbs suaves, ruído leve)
+   - Header/brand (com placeholder para a logo)
+   - Card do login (efeito "glass" leve)
+   - Campos de formulário e dropdown customizado
+   - Botão primário e estados de foco/disabled
+   - Mensagens de erro e divisores
+   - Rodapé
+   - Ajustes responsivos
+============================================================================= */
+
+/* ----------------------------- Design tokens ------------------------------ */
+.login-page {
+    overflow: hidden; /* impede scroll lateral/vertical causados pelos orbs/gradientes */
+  --bg-start: #eef5ff; /* canto superior esquerdo */
+  --bg-end: #fff7ee; /* canto inferior direito */
+  --card: #ffffff; /* fundo do card */
+  --text: #0f172a; /* texto principal */
+  --muted: #64748b; /* texto secundário */
+  --border: #e5e7eb; /* bordas sutis */
+  --primary: #0b55a6; /* cor do botão/realces */
+  --primary-hover: #0a4790; /* hover do botão */
+  --ring: rgba(11, 85, 166, 0.25); /* foco visível */
+  --shadow-xl: 0 25px 70px rgba(0, 0, 0, 0.15); /* sombra principal */
+  --shadow-soft: 0 2px 10px rgba(16, 24, 40, 0.08); /* sombra leve */
+  --chip-bg: #eaf2ff;
+  --chip-text: #1e3a8a;
+  --danger: #d92d20; /* mensagens de erro */
+  --card-blur: blur(6px); /* efeito glass do card */
+  color: var(--text);
+
+  /* layout base */
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 16px 64px;
+
+  /* fundo com dois gradientes + orbs via pseudo-elementos */
+  position: relative;
+  background: radial-gradient(
+      1200px 600px at 10% 0%,
+      var(--bg-start),
+      #fff0 60%
+    ),
+    radial-gradient(1200px 600px at 100% 100%, var(--bg-end), #fff0 60%),
+    #ffffff;
+}
+
+/* Orbs decorativos (não interferem no layout) */
+.login-page::before,
+.login-page::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  filter: blur(60px);
+  opacity: 0.35;
+  z-index: 0;
+}
+.login-page::before {
+  width: 420px;
+  height: 420px;
+  left: -120px;
+  top: -120px;
+  background: radial-gradient(closest-side, #6aa6ff, transparent 70%);
+}
+.login-page::after {
+  width: 520px;
+  height: 520px;
+  right: -160px;
+  bottom: -160px;
+  background: radial-gradient(closest-side, #ffd4a6, transparent 70%);
+}
+
+/* ------------------------------- Brand ------------------------------------ */
+.brand {
+  position: relative;
+  z-index: 1;
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;  /* <-- imagem em cima, texto embaixo */
+  align-items: center;
+  gap: 10px;
+  user-select: none;
+}
+
+
+/* Placeholder de logo (trocar por <img /> futuramente) */
+.brand-logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: #fff;
+  display: grid;
+  place-items: center;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid #e5e7eb; /* opcional: remove o dashed do placeholder */
+}
+
+/* garante que a imagem se ajuste sem distorcer */
+/* Logo sem moldura, maior */
+.brand-img {
+  width: 280px; /* ajuste fino aqui se quiser maior/menor */
+  height: center;
+  object-fit: contain;
+  display: block;
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+  align-items: center;     /* centraliza verticalmente a coluna */
+  text-align: center;      /* centraliza o texto */
+}
+.brand-text strong {
+  letter-spacing: 0.2px;
+  font-size: 22px;
+}
+.brand-text span {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* -------------------------------- Card ------------------------------------ */
+.login-card {
+  position: relative;
+  z-index: 1; /* acima dos orbs */
+  width: 520px;
+  max-width: 100%;
+  margin-top: 18px;
+  background: color-mix(in oklab, var(--card) 90%, white);
+  border-radius: 18px;
+  box-shadow: var(--shadow-xl);
+  padding: 28px;
+
+  /* sutil glass look */
+  backdrop-filter: var(--card-blur);
+}
+
+/* Títulos do card */
+.title {
+  margin: 6px 0 4px;
+  font-size: 26px;
+  text-align: center;
+  font-weight: 700;
+}
+.subtitle {
+  margin: 0 0 18px;
+  text-align: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* ---------------------------- Formulário base ----------------------------- */
+.form {
+  display: block;
+}
+
+/* campos */
+.field {
+  position: relative;
+  margin-bottom: 14px;
+}
+
+.select,
+.input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 1px 0 rgba(16, 24, 40, 0.02);
+  padding: 0 12px 0 12px;
+}
+
+.select:focus-visible,
+.input:focus-within {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--ring);
+}
+
+.left-icon {
+  color: #94a3b8;
+  display: grid;
+  place-items: center;
+}
+
+/* Dropdown customizado */
+.select {
+  width: 100%;
+  justify-content: space-between;
+  cursor: pointer;
+}
+.select.open .chevron {
+  transform: rotate(180deg);
+}
+
+.select-label {
+  flex: 1;
+  text-align: left;
+  color: #0f172a;
+}
+.chevron {
+  color: #64748b;
+  transition: transform 0.15s ease;
+}
+
+.select-menu {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 6px;
+  box-shadow: var(--shadow-xl);
+  z-index: 10;
+  max-height: 260px;
+  overflow: auto;
+}
+
+.select-item {
+  display: grid;
+  grid-template-columns: 22px 1fr 22px;
+  align-items: center;
+  gap: 8px;
+  border-radius: 10px;
+  padding: 10px 10px;
+  cursor: pointer;
+  color: #0f172a;
+}
+.select-item:hover {
+  background: #eef5ff;
+}
+.select-item.selected {
+  background: #e6f0ff;
+}
+
+.item-icon {
+  color: #64748b;
+}
+.item-check {
+  color: var(--primary);
+}
+
+/* Input padrão */
+.input input {
+  border: 0;
+  outline: 0;
+  width: 100%;
+  height: 100%;
+  font-size: 14px;
+  color: #0f172a;
+  background: transparent;
+}
+.input input::placeholder {
+  color: #94a3b8;
+}
+
+/* Mensagem de erro */
+.error-msg {
+  margin: 4px 0 8px;
+  color: var(--danger);
+  font-size: 13px;
+}
+
+/* ---------------------------- Botão primário ------------------------------ */
+.btn-primary {
+  margin-top: 6px;
+  width: 100%;
+  height: 48px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--primary);
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 8px 20px rgba(11, 85, 166, 0.35);
+  cursor: pointer;
+  transition: transform 0.02s ease, background 0.2s ease, opacity 0.2s ease;
+}
+.btn-primary:hover {
+  background: var(--primary-hover);
+}
+.btn-primary:active {
+  transform: translateY(1px);
+}
+.btn-primary .arrow {
+  display: grid;
+  place-items: center;
+}
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* -------------------------------- Divisor --------------------------------- */
+.card-divider {
+  margin: 18px 0 10px;
+  border: none;
+  height: 1px;
+  background: var(--border);
+}
+.card-divider-text {
+  margin: 0;
+  text-align: center;
+  color: var(--muted);
+  font-size: 12px;
+}
+.card-divider-text a {
+  color: var(--primary);
+  text-decoration: none;
+}
+.card-divider-text a:hover {
+  text-decoration: underline;
+}
+
+/* -------------------------------- Rodapé --------------------------------- */
+.emergency {
+  text-align: center;
+  margin-top: 28px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* ------------------------------- Responsivo --------------------------------*/
+@media (max-width: 520px) {
+  .brand-img { width: 120px; }
+}
+  .brand-text strong {
+    font-size: 20px;
+  }
