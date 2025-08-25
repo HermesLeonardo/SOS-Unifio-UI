@@ -1,0 +1,63 @@
+/* Página de Informar Localização (layout e tipografia) */
+
+.loc-page { background:#f3f5f7; min-height:100vh; }
+
+/* Área principal ocupa a viewport menos o header.
+   Usamos grid + place-items:center para centralizar 100%. */
+.loc-main {
+  min-height: calc(100vh - 64px);   /* ajuste fino do header */
+  display: grid;
+  place-items: center;               /* centraliza vertical e horizontal */
+  padding: 12px 16px 24px;
+}
+
+/* Contêiner do conteúdo central (progresso + card) */
+.loc-center {
+  width: 100%;
+  max-width: 920px;
+}
+
+/* Progresso acima do card, com respiro */
+.loc-progress { margin: 6px 0 12px; }
+
+.loc-card { margin: 0 auto; }
+
+.loc-card__header { margin-bottom: 12px; }
+.loc-card__title {
+  display:flex; align-items:center; gap:8px; font-weight:700; color:#0f172a;
+}
+.loc-card__desc { margin: 6px 0 14px; color: var(--muted,#64748b); font-size: 14px; }
+
+.loc-field { margin-bottom: 14px; }
+.loc-label {
+  display:flex; align-items:center; gap:8px; font-weight:600; color:#0f172a;
+  margin: 6px 0 8px;
+}
+.loc-label__icon { color:#2563eb; display:grid; place-items:center; }
+
+.loc-help { margin: 6px 2px 0; color: var(--muted,#64748b); font-size: 12px; }
+
+.loc-actions { margin-top: 6px; display:flex; justify-content:flex-end; }
+
+/* Progresso com a MESMA largura do card ------------------------------- */
+/* O card da UI tem width: 520px; então travamos o progresso no mesmo tamanho. */
+.loc-progress {
+  width: 520px;
+  max-width: 100%;
+  margin: 6px auto 12px;   /* centraliza em relação à página */
+}
+
+/* garantia de centralização do card também (se já existir, mantém) */
+.loc-card {
+  width: 520px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+/* Responsivo: quando a tela for menor que 520px, ambos ficam em 100% */
+@media (max-width: 520px) {
+  .loc-progress,
+  .loc-card {
+    width: 100%;
+  }
+}
