@@ -47,13 +47,17 @@ const CATEGORIES: { key: CatKey; title: string; desc: string; color: string; pla
 export default function SymptomsPage() {
   // usuário autenticado (mock até integrar backend)
   const auth = useMemo(() => {
-    try { return JSON.parse(localStorage.getItem("auth") || "{}"); }
-    catch { return {}; }
+    try {
+      return JSON.parse(localStorage.getItem("auth") || "{}");
+    } catch {
+      return {};
+    }
   }, []);
 
   const [selected, setSelected] = useState<CatKey | null>(null);
   const [brief, setBrief] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false); // <- novo
 
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
@@ -72,30 +76,37 @@ export default function SymptomsPage() {
     window.location.hash = "/people";
   }
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!selected) { setError("Escolha uma categoria de sintomas."); return; }
+  async function handleSubmit() {
+    if (!selected) {
+      setError("Escolha uma categoria de sintomas.");
+      return;
+    }
     if (!brief.trim()) {
       setError("Descreva brevemente o principal sintoma.");
       bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
 
-    // Salva tudo localmente (troque por chamada de API quando integrar)
-    const payload = {
-      location: JSON.parse(localStorage.getItem("request.location") || "{}"),
-      people: JSON.parse(localStorage.getItem("request.people") || "{}"),
-      symptoms: { category: selected, brief: brief.trim() },
-    };
-    localStorage.setItem("request.full", JSON.stringify(payload));
+    try {
+      setSubmitting(true);
+      setError(null);
 
-    console.log("[REQUEST_READY]", payload);
-    // Aqui você pode navegar para uma tela de confirmação/enviado:
-    // window.location.hash = "/request/confirm";
-    alert("Solicitação pronta para envio! (mock)");
+      // Salva tudo localmente (troque por chamada de API quando integrar)
+      const payload = {
+        location: JSON.parse(localStorage.getItem("request.location") || "{}"),
+        people: JSON.parse(localStorage.getItem("request.people") || "{}"),
+        symptoms: { category: selected, brief: brief.trim() },
+      };
+      localStorage.setItem("request.full", JSON.stringify(payload));
+
+      // navega para a tela de confirmação
+      window.location.hash = "/confirm";
+    } finally {
+      setSubmitting(false);
+    }
   }
 
-  const current = CATEGORIES.find(c => c.key === selected);
+  const current = CATEGORIES.find((c) => c.key === selected);
   const currentPlaceholder = current?.placeholder || "Ex.: dor de cabeça, vômitos, febre alta";
 
   return (
@@ -105,7 +116,10 @@ export default function SymptomsPage() {
         logoSize={56}
         sectionTitle="Descrever Sintomas"
         user={{ name: auth?.name || "Aluno Teste", ra: auth?.ra, role: auth?.role }}
-        onLogout={() => { localStorage.removeItem("auth"); window.location.hash = "/login"; }}
+        onLogout={() => {
+          localStorage.removeItem("auth");
+          window.location.hash = "/login";
+        }}
         onEmergencyClick={() => console.log("ligar 192")}
       />
 
@@ -120,7 +134,7 @@ export default function SymptomsPage() {
             <div className="symp-topbar">
               <button type="button" className="back-link" onClick={handleBack}>
                 <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
-                  <path d="M11.67 3.87L9.9 2.1 0 12l9.9 9.9 1.77-1.77L3.54 12z" fill="currentColor"/>
+                  <path d="M11.67 3.87L9.9 2.1 0 12l9.9 9.9 1.77-1.77L3.54 12z" fill="currentColor" />
                 </svg>
                 Voltar
               </button>
@@ -129,18 +143,16 @@ export default function SymptomsPage() {
             <div className="symp-head">
               <div className="symp-title">
                 <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
-                  <path d="M20 8a8 8 0 11-7-7v2a6 6 0 106 6h2z" fill="currentColor"/>
+                  <path d="M20 8a8 8 0 11-7-7v2a6 6 0 106 6h2z" fill="currentColor" />
                 </svg>
                 <span>Como você está se sentindo?</span>
               </div>
-              <p className="symp-desc">
-                Selecione uma categoria abaixo e descreva rapidamente seu principal sintoma.
-              </p>
+              <p className="symp-desc">Selecione uma categoria abaixo e descreva rapidamente seu principal sintoma.</p>
             </div>
 
             {/* CATEGORIAS (apenas blocos coloridos) */}
             <div className="cat-grid">
-              {CATEGORIES.map(cat => (
+              {CATEGORIES.map((cat) => (
                 <button
                   key={cat.key}
                   type="button"
@@ -156,7 +168,9 @@ export default function SymptomsPage() {
 
             {/* Caixa de texto obrigatória */}
             <div ref={bottomRef} className="symp-bottom">
-              <label className="symp-label">Descreva brevemente o principal sintoma <span className="req">*</span></label>
+              <label className="symp-label">
+                Descreva brevemente o principal sintoma <span className="req">*</span>
+              </label>
               <Textarea
                 placeholder={currentPlaceholder}
                 value={brief}
@@ -165,10 +179,19 @@ export default function SymptomsPage() {
               />
               <p className="hint">Exemplos: “dor de cabeça”, “vômitos”, “falta de ar”.</p>
 
-              {error && <div className="symp-error" role="alert">{error}</div>}
+              {error && (
+                <div className="symp-error" role="alert">
+                  {error}
+                </div>
+              )}
 
               <div className="symp-actions">
-                <Button type="submit" onClick={handleSubmit} disabled={!selected || !brief.trim()}>
+                <Button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={submitting || !selected || !brief.trim()}
+                  loading={submitting}
+                >
                   Enviar Solicitação
                 </Button>
               </div>
