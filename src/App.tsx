@@ -3,6 +3,8 @@ import Login from "./pages/login";
 import LocationPage from "./pages/location";
 import PeoplePage from "./pages/people";
 import SymptomsPage from "./pages/symptoms";
+import ConfirmPage from "./pages/confirm";
+import StatusPage from "./pages/status";
 
 function useHashRoute() {
   const [route, setRoute] = useState<string>(() => window.location.hash.replace(/^#/, "") || "/login");
@@ -22,6 +24,8 @@ export default function App() {
     case "/location": element = <LocationPage />; break;
     case "/people":   element = <PeoplePage />;   break;
     case "/symptoms":  return <SymptomsPage />; break;
+    case "/confirm":   element = <ConfirmPage />;  break;
+    case "/status":   element = <StatusPage />; break;
     case "/login":
     default:          element = <Login />;        break;
   }
