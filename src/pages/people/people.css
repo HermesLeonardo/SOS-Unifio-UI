@@ -1,0 +1,112 @@
+/* Etapa 2: Quantidade de Pessoas */
+.people-page { background:#f3f5f7; min-height:100vh; }
+
+/* Centraliza como na etapa 1 */
+.people-main {
+  min-height: calc(100vh - 64px);
+  display: grid;
+  place-items: center;
+  padding: 12px 16px 24px;
+}
+.people-center { width: 100%; max-width: 920px; }
+
+/* Progresso = mesma largura do card */
+.people-progress { width: 520px; max-width: 100%; margin: 6px auto 12px; }
+
+/* Card padrão (520px) */
+.people-card { width: 520px; max-width: 100%; margin: 0 auto; }
+
+/* Topo do card com botão Voltar */
+.people-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 8px;
+}
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border,#e5e7eb);
+  background: #fff;
+  color: #0f172a;
+  cursor: pointer;
+}
+.back-link:hover { background:#f8fafc; }
+.back-link:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px var(--ring,rgba(11,85,166,.25));
+  border-color: var(--primary,#0b55a6);
+}
+
+/* Cabeçalho do card */
+.people-head { margin-bottom: 12px; }
+.people-title { display:flex; align-items:center; gap:8px; font-weight:700; color:#0f172a; }
+.people-desc { margin: 6px 0 14px; color: var(--muted,#64748b); font-size: 14px; }
+
+/* Lista de opções */
+.opt-list { display: flex; flex-direction: column; gap: 12px; }
+.opt-item {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--border,#e5e7eb);
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px 14px;
+  cursor: pointer;
+  box-shadow: 0 1px 0 rgba(16,24,40,.02);
+  text-align: left;
+  transition: box-shadow .15s ease, border-color .15s ease, background .15s ease;
+}
+.opt-item:hover { background: #f8fafc; }
+.opt-item:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px var(--ring,rgba(11,85,166,.25));
+  border-color: var(--primary,#0b55a6);
+}
+.opt-item.is-selected {
+  border-color: var(--primary,#0b55a6);
+  box-shadow: 0 0 0 4px var(--ring,rgba(11,85,166,.25));
+}
+
+.opt-left { display: flex; align-items: center; gap: 12px; }
+.opt-icon {
+  width: 32px; height: 32px; border-radius: 10px;
+  background: #eef5ff; color: #0b55a6; display: grid; place-items: center;
+}
+.opt-text { display: flex; flex-direction: column; }
+.opt-title { font-weight: 600; color: #0f172a; }
+.opt-desc  { font-size: 12px; color: var(--muted,#64748b); }
+
+/* Tick de selecionado (direita) */
+.opt-check { color: var(--primary,#0b55a6); display: grid; place-items: center; }
+
+/* Erro */
+.people-error { margin: 8px 2px 0; color: #b42318; font-size: 13px; }
+
+/* Ações */
+.people-actions {
+  margin-top: 16px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+/* Só “Próximo” à direita quando usar .only-next */
+.people-actions.only-next {
+  justify-content: flex-end;
+}
+
+/* Botão secundário local (mantém UI/Button como primário) */
+.btn-secondary{
+  height: 40px; padding: 0 14px; border-radius: 10px;
+  border: 1px solid var(--border,#e5e7eb);
+  background: #fff; color: #0f172a; cursor: pointer;
+}
+.btn-secondary:hover{ background:#f8fafc; }
+
+/* Responsivo */
+@media (max-width: 520px) {
+  .people-progress, .people-card { width: 100%; }
+}

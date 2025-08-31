@@ -1,0 +1,46 @@
+/* Tela de Confirmação */
+
+.conf-page { background:#f3f5f7; min-height:100vh; }
+
+.conf-main {
+  min-height: calc(100vh - 64px);
+  display: grid;
+  place-items: center;
+  padding: 16px 16px 32px;
+}
+
+.conf-center { width: 100%; max-width: 980px; }
+
+/* Card central */
+.conf-card{
+  width: 760px; max-width: 100%; margin: 0 auto;
+  text-align:center;
+}
+.conf-icon{ margin: 6px 0 8px; display:grid; place-items:center; }
+.conf-title{ margin: 6px 0 4px; font-size:26px; font-weight:800; color:#0f172a; }
+.conf-subtitle{ margin: 0 0 16px; color:#64748b; }
+
+/* Alerta verde */
+.conf-alert{
+  border:1px solid #86efac; background:#ecfdf5; color:#14532d;
+  padding:12px 14px; border-radius:12px; text-align:left;
+  display:flex; flex-direction:column; gap:6px; margin: 0 8px 16px;
+}
+.conf-alert__title{ display:flex; align-items:center; gap:8px; }
+.conf-alert__desc{ margin:0; font-size:14px; }
+
+/* Ações */
+.conf-actions{ display:flex; justify-content:center; margin-top: 6px; }
+.conf-id{ margin-top: 10px; color:#64748b; font-size:13px; }
+
+/* responsivo */
+@media (max-width: 760px){
+  .conf-card{ width:100%; }
+}
+
+/* Barra de progresso do confirm */
+.conf-progress {
+  width: 760px;        /* mesma largura do card desta tela */
+  max-width: 100%;
+  margin: 6px auto 16px;
+}
