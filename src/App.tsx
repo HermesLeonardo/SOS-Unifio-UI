@@ -5,6 +5,7 @@ import PeoplePage from "./pages/people";
 import SymptomsPage from "./pages/symptoms";
 import ConfirmPage from "./pages/confirm";
 import StatusPage from "./pages/status";
+import AdminDashboard from "./pages/admin";
 
 function useHashRoute() {
   const [route, setRoute] = useState<string>(() => window.location.hash.replace(/^#/, "") || "/login");
@@ -26,6 +27,9 @@ export default function App() {
     case "/symptoms":  return <SymptomsPage />; break;
     case "/confirm":   element = <ConfirmPage />;  break;
     case "/status":   element = <StatusPage />; break;
+    case "/admin":    element = <AdminDashboard />; break;
+    case "/socorrista": element = <AdminDashboard />; break;
+    case "/colaborador": element = <AdminDashboard />; break;
     case "/login":
     default:          element = <Login />;        break;
   }
