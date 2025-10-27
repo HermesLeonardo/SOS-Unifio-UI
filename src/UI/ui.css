@@ -176,10 +176,6 @@
 }
 .ui-textarea textarea::placeholder{ color:#94a3b8; }
 
-/* =============================================================================
-   HEADER PADRÃO CORPORATIVO (ADMIN / GERAL)
-   Usa o mesmo padrão visual da .app-header, mas com estilo refinado e modular.
-============================================================================= */
 
 .ui-header {
   position: sticky;

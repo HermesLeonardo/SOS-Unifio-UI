@@ -1,0 +1,110 @@
+/* Base */
+.st-page { background:#f3f5f7; min-height:100vh; }
+.st-main { min-height:calc(100vh - 64px); padding:12px 16px 24px; }
+
+/* --------- GRID DE 2 COLUNAS --------- */
+.st-shell{
+  max-width:1140px; margin:0 auto;
+  display:grid; gap:24px;
+  grid-template-columns:minmax(0, 1fr) 340px;  /* direita fixa */
+  align-items:start;
+}
+.st-left{ display:flex; flex-direction:column; gap:16px; min-width:0; }
+.st-right{ width:340px; }
+.st-right .st-card{ position:sticky; top:96px; } /* gruda ao rolar */
+
+.st-card{ width:100%; }
+
+/* Distancia dos itens do meio do site */
+.st-right--offset { transform: translateX(64px); }
+
+/* Mobile: remove offset e sticky */
+@media (max-width: 1080px){
+  .st-shell{ grid-template-columns: 1fr; }
+  .st-right .st-card{ position:static; }
+  .st-right--offset{ transform:none; }
+  .st-info-grid{ grid-template-columns: 1fr; }
+}
+
+/* Cabeçalho + pílulas */
+.st-card-head{
+  display:flex; align-items:center; justify-content:space-between; gap:8px;
+  margin-bottom:8px;
+}
+.st-card-head h2{ margin:0; font-size:18px; }
+.st-pills{ display:flex; gap:8px; flex-wrap:wrap; }
+.pill{
+  display:inline-flex; align-items:center; height:28px; padding:0 10px;
+  border-radius:999px; font-weight:700; font-size:12px; letter-spacing:.2px;
+}
+.pill-red{ background:#fee2e2; color:#b91c1c; }
+.pill-blue{ background:#e0ecff; color:#1e40af; }
+
+/* Progresso / Etapas */
+.st-progress{ margin:6px 0 10px; }
+.st-steps{ list-style:none; margin:6px 0 0; padding:0; display:flex; flex-direction:column; gap:10px; }
+.st-step{ display:flex; gap:10px; align-items:flex-start; }
+.st-bullet{
+  width:28px; height:28px; border-radius:999px; display:grid; place-items:center;
+  background:#eef2ff; color:#3730a3; font-weight:700;
+}
+.st-step.done .st-bullet{ background:#E6FBEA; color:#16A34A; }
+.st-step.current .st-bullet{ box-shadow:0 0 0 3px rgba(59,130,246,.25); }
+.st-step-content{ display:flex; flex-direction:column; gap:2px; }
+.st-step-title{ font-weight:700; display:flex; align-items:center; gap:8px; }
+.st-step-desc{ margin:0; color:#64748b; font-size:13px; }
+.chip{
+  padding:3px 8px; font-size:11px; border-radius:999px; font-weight:700;
+  border:1px solid #86efac; background:#ecfdf5; color:#14532d;
+}
+
+/* Info do chamado */
+.st-block-title{ margin:0 0 8px; font-size:16px; }
+.st-info-grid{
+  display:grid; grid-template-columns:1fr 1fr; gap:10px 16px;
+  padding-bottom:10px; border-bottom:1px solid #eef2f7; margin-bottom:10px;
+}
+.st-info-item{ display:flex; gap:6px; }
+.st-info-label{ color:#64748b; min-width:160px; }
+.st-info-value{ color:#0f172a; }
+.badge-critical{
+  background:#fee2e2; color:#b91c1c; border:1px solid #fecaca;
+  padding:2px 8px; border-radius:999px; font-size:12px; font-weight:700;
+}
+
+/* Mini blocos */
+.st-mini-block{ margin-top:10px; }
+.st-mini-title{ font-weight:700; margin-bottom:6px; }
+.st-mini-body{
+  background:#f8fafc; border:1px solid #e5e7eb; border-radius:10px;
+  padding:10px 12px; min-height:40px;
+}
+
+/* Instruções */
+.st-tips{ margin:4px 0 0; padding-left:18px; color:#0f172a; }
+.st-tips li{ margin:6px 0; }
+
+/* Assistente Médico (sidebar) */
+.st-assist .assist-head{ display:flex; gap:10px; align-items:flex-start; margin-bottom:8px; }
+.assist-icon{
+  width:34px; height:34px; border-radius:10px; display:grid; place-items:center;
+  background:#eef5ff; color:#0b55a6;
+}
+.assist-sub{ margin:2px 0 0; color:#64748b; font-size:13px; }
+.assist-bullets{ margin:6px 0 12px 18px; color:#0f172a; }
+
+.assist-chat{ display:none; margin-top:12px; }
+.assist-chat.open{ display:block; }
+
+.chat-box{
+  border:1px solid #e5e7eb; background:#fff; border-radius:12px;
+  padding:10px; max-height:240px; overflow:auto;
+  box-shadow:inset 0 1px 0 rgba(16,24,40,.02);
+}
+.msg{ padding:8px 10px; border-radius:10px; margin:6px 0; width:fit-content; max-width:100%; }
+.msg.user{ background:#e0ecff; color:#1e40af; margin-left:auto; }
+.msg.assistant{ background:#ecfdf5; color:#14532d; }
+
+.chat-input{ display:flex; gap:8px; margin-top:8px; align-items:flex-start; }
+.chat-input textarea{ min-height:46px; }
+.chat-disclaimer{ margin-top:8px; font-size:12px; color:#64748b; }
