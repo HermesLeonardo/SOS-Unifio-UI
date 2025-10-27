@@ -1,76 +1,83 @@
-import React from "react";
+import React, { useMemo } from "react";
 import "./ui.css";
+import { Settings, LogOut } from "lucide-react";
+import logoDefault from "../images/logo.png";
 
-type UserInfo = { name: string; ra?: string; role?: string };
-
-type HeaderProps = {
-  logoSrc: string;
-  logoSize?: number;              // <-- NOVO: largura da logo em px (default 32)
-  appName?: string;
-  sectionTitle?: string;          // ex.: "Informar Localização"
-  user?: UserInfo;                // aparece à direita
-  emergencyNumber?: string;       // padrão "192"
+interface HeaderProps {
+  logoSrc?: string;
+  logoSize?: number;
+  sectionTitle?: string;
+  user?: { name?: string; ra?: string; role?: string };
   onLogout?: () => void;
-  onEmergencyClick?: () => void;
-};
+  backgroundColor?: string;
+}
 
-export const Header: React.FC<HeaderProps> = ({
+export function Header({
   logoSrc,
-  logoSize = 100,                  // <-- maior por padrão
-  appName = "SOS UNIFIO",
+  logoSize = 48,
   sectionTitle,
   user,
-  emergencyNumber = "192",
   onLogout,
-  onEmergencyClick,
-}) => {
+  backgroundColor = "#ffffff",
+}: HeaderProps) {
+  const isAdmin = user?.role?.toLowerCase() === "administrador";
+
+  const headerStyle = useMemo<React.CSSProperties>(
+    () => ({
+      backgroundColor,
+      boxShadow: "0 1px 2px rgba(0,0,0,0.08)",
+      transform: "translateZ(0)",
+      backfaceVisibility: "hidden" as React.CSSProperties["backfaceVisibility"],
+    }),
+    [backgroundColor]
+  );
+
+  function handleAdminOptions() {
+    window.location.href = "#/admin/opcoes-admin";
+  }
+
   return (
-    <header className="app-header" role="banner">
-      <div className="app-header__left">
+    <header className="ui-header" style={headerStyle}>
+      <div className="header-left">
         <img
-          src={logoSrc}
-          alt={appName}
-          className="app-header__logo"
-          style={{ width: logoSize, height: "auto" }}  // <-- controla o tamanho
+          src={logoSrc || logoDefault}
+          alt="Logo SOS UNIFIO"
+          width={logoSize}
+          height={logoSize}
+          className="header-logo"
+          draggable={false}
+          decoding="async"
         />
-        <div className="app-header__brand">
-          <strong className="app-header__title">{appName}</strong>
-          {sectionTitle && <span className="app-header__subtitle">{sectionTitle}</span>}
+        <div className="header-text">
+          <h1>SOS UNIFIO</h1>
+          <p>{sectionTitle || "Painel Administrativo"}</p>
         </div>
       </div>
 
-      <div className="app-header__right">
-        <button
-          type="button"
-          className="app-header__link app-header__link--danger"
-          onClick={onEmergencyClick}
-          title={`Emergência ${emergencyNumber}`}
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
-            <path d="M6.62 10.79a15.05 15.05 0 006.59 6.59l2.2-2.2a1 1 0 011.02-.24c1.12.37 2.33.57 3.57.57a1 1 0 011 1V21a1 1 0 01-1 1C10.3 22 2 13.7 2 3a1 1 0 011-1h4.5a1 1 0 011 1c0 1.24.2 2.45.57 3.57a1 1 0 01-.24 1.02l-2.2 2.2z" fill="currentColor"/>
-          </svg>
-          <span>Emergência {emergencyNumber}</span>
-        </button>
-
+      <div className="header-right">
         {user && (
-          <div className="app-header__user" title={user.role ? `${user.role}` : undefined}>
-            <div className="app-header__user-name">{user.name}</div>
-            {user.ra && <div className="app-header__user-meta">RA: {user.ra}</div>}
+          <div className="user-info">
+            <strong>{user.name || "Usuário"}</strong>
+            <span>{user.role}</span>
           </div>
         )}
 
-        <button
-          type="button"
-          className="app-header__iconbtn"
-          onClick={onLogout}
-          aria-label="Sair"
-          title="Sair"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden>
-            <path d="M16 13v-2H7V8l-5 4 5 4v-3h9zM20 3h-8a2 2 0 00-2 2v3h2V5h8v14h-8v-3h-2v3a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2z" fill="currentColor"/>
-          </svg>
-        </button>
+        {isAdmin && (
+          <button
+            className="admin-btn"
+            onClick={handleAdminOptions}
+            title="Opções do Administrador"
+          >
+            <Settings size={20} />
+          </button>
+        )}
+
+        {onLogout && (
+          <button className="logout-btn" onClick={onLogout} title="Sair">
+            <LogOut size={20} />
+          </button>
+        )}
       </div>
     </header>
   );
-};
+}
