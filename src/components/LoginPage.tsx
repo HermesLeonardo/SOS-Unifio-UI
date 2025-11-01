@@ -17,6 +17,7 @@ import {
   Crown,
   Settings
 } from 'lucide-react';
+import { loginUser } from '../services/api';
 
 const LoginPage: React.FC = () => {
   const { login } = useApp();
@@ -25,26 +26,46 @@ const LoginPage: React.FC = () => {
   const [selectedRole, setSelectedRole] = useState<'aluno' | 'colaborador' | 'socorrista' | 'administrador'>('aluno');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  console.log("LoginPage carregado");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!ra || !password) return;
 
-    // Validar RA (6 dígitos)
-    if (!/^\d{6}$/.test(ra)) {
-      alert('RA deve conter exatamente 6 dígitos');
+    // validação de matrícula (ex.: 6 dígitos)
+    if (!/^[A-Za-z0-9]{5,10}$/.test(ra)) {
+      alert("Matrícula inválida.");
       return;
     }
 
     setIsLoading(true);
-    
-    // Simular delay de autenticação
-    setTimeout(() => {
-      // Criar email baseado no RA e tipo de usuário
-      const email = `${ra}@unifio.edu.br`;
-      login(email, selectedRole, ra);
+
+    try {
+      const data = await loginUser(ra, password);
+
+      if (!data || !data.usuario || !data.token) {
+        alert("Resposta inválida do servidor.");
+        setIsLoading(false);
+        return;
+      }
+
+      const { token, usuario } = data;
+
+      // salva token JWT localmente
+      localStorage.setItem("token", token);
+
+      // aguarda um ciclo de renderização antes de trocar o contexto
+      setTimeout(() => {
+        login(usuario.nome, usuario.tipo, ra);
+      }, 0);
+    } catch (err: any) {
+      const msg =
+        err?.message || "Erro ao realizar login. Tente novamente.";
+      alert(msg);
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
   };
 
   const roleOptions = [

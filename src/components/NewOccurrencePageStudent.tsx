@@ -8,8 +8,10 @@ import { Badge } from './ui/badge';
 import { Alert, AlertDescription } from './ui/alert';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { useApp } from '../contexts/AppContext';
-import { mockLocations, symptomLabels, classifyOccurrence, peopleCountLabels } from '../data/mockData';
+import { symptomLabels, classifyOccurrence, peopleCountLabels } from '../data/mockData';
+import { locationService } from "../services/locationService";
 import { PredefinedSymptom, LocationMethod, Location, Occurrence, PeopleCount } from '../types';
+import MobileNav from './MobileNav';
 import { 
   MapPin, 
   Heart,
@@ -39,7 +41,9 @@ import {
   Flame,
   HelpCircle
 } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from "sonner";
+import { occurrenceService } from "../services/occurrenceService";
+
 
 const NewOccurrencePageStudent: React.FC = () => {
   const { user, setCurrentPage, setActiveOccurrence, setUser } = useApp();
@@ -91,56 +95,62 @@ const NewOccurrencePageStudent: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!user || !selectedPeopleCount || !symptomsDescription.trim() || !selectedCategory) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
-      // Simular criação da ocorrência
-      const selectedLocation = mockLocations.find(l => l.id === selectedLocationId);
-      
-      // Map category to symptom for the occurrence data
-      const symptomMapping: Record<string, PredefinedSymptom> = {
-        'lesoes-traumas': 'lesao_trauma',
-        'queimaduras-intoxicacoes': 'outro',
-        'dificuldades-respiratorias': 'dificuldade_respirar',
-        'mal-estar-subito': 'nausea_vomito',
-        'crises-neurologicas': 'convulsao'
-      };
-      
-      const newOccurrence: Occurrence = {
-        id: `occ-${Date.now()}`,
-        userId: user.id,
-        user: user,
-        type: classification?.type || 'urgencia',
-        status: 'aberto',
-        priority: classification?.priority as any || 'media',
-        locationId: selectedLocationId || undefined,
-        location: selectedLocation,
-        locationMethod: 'manual',
-        locationDescription,
-        peopleCount: selectedPeopleCount as PeopleCount,
-        symptoms: [symptomMapping[selectedCategory]], // Single symptom based on category
-        description: symptomsDescription, // Using required symptoms description
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        responders: [],
-        observations: []
+      const tipoOcorrenciaMapping: Record<string, number> = {
+        "lesoes-traumas": 1,
+        "queimaduras-intoxicacoes": 2,
+        "dificuldades-respiratorias": 3,
+        "mal-estar-subito": 4,
+        "crises-neurologicas": 5,
       };
 
-      // Simular delay de envio
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      const tipoOcorrenciaId = tipoOcorrenciaMapping[selectedCategory] || 1;
+
+      const result = await occurrenceService.abrirOcorrencia(
+        Number(selectedLocationId),
+        selectedPeopleCount === "1" ? 1 : selectedPeopleCount === "2-3" ? 2 : 3,
+        tipoOcorrenciaId,
+        symptomsDescription,
+        locationDescription
+      );
       
-      setActiveOccurrence(newOccurrence);
-      setStep('confirmation');
+
+      console.log("Ocorrência criada:", result);
+      console.log("Dados do chamado enviado:", {
+        locationId: Number(selectedLocationId),
+        peopleCount: selectedPeopleCount === "1" ? 1 : selectedPeopleCount === "2-3" ? 2 : 3,
+        occurrenceType: tipoOcorrenciaId,
+        description: symptomsDescription,
+        locationDescription: locationDescription
+      });
       
-      toast.success('Chamado enviado com sucesso!');
-      
-    } catch (error) {
-      toast.error('Erro ao enviar chamado. Tente novamente.');
+      toast.success("Chamado enviado com sucesso!");
+      setStep("confirmation");
+    } catch (error: any) {
+      console.error(error);
+      toast.error("Erro ao enviar chamado. Tente novamente.");
     } finally {
       setIsSubmitting(false);
     }
   };
+  
+  const [locations, setLocations] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchLocations() {
+      try {
+        const data = await locationService.getAll();
+        setLocations(data);
+        console.log("Locais carregados:", data);
+      } catch (err) {
+        console.error("Erro ao buscar locais:", err);
+      }
+    }
+    fetchLocations();
+  }, []);
 
   // NEW: Simplified main categories only
   const symptomCategories = [
@@ -193,32 +203,32 @@ const NewOccurrencePageStudent: React.FC = () => {
 
   const renderLocationStep = () => (
     <Card className="border-gray-200 shadow-unifio">
-      <CardHeader className="pb-6">
-        <CardTitle className="flex items-center gap-3 text-unifio-primary text-xl">
-          <MapPin className="w-6 h-6" />
+      <CardHeader className="pb-4 lg:pb-6">
+        <CardTitle className="flex items-center gap-2 lg:gap-3 text-unifio-primary text-lg lg:text-xl">
+          <MapPin className="w-5 h-5 lg:w-6 lg:h-6" />
           Onde você está?
         </CardTitle>
-        <CardDescription className="text-gray-600 text-base">
+        <CardDescription className="text-gray-600 text-sm lg:text-base">
           Selecione o bloco, informe sua localização específica e quantas pessoas precisam de atendimento
         </CardDescription>
       </CardHeader>
       
-      <CardContent className="space-y-8">
+      <CardContent className="space-y-6 lg:space-y-8">
         {/* Block Selection */}
-        <div className="space-y-4">
-          <Label htmlFor="location-select" className="text-base">
-            <div className="flex items-center gap-3">
-              <Building className="w-5 h-5 text-unifio-primary" />
+        <div className="space-y-3 lg:space-y-4">
+          <Label htmlFor="location-select" className="text-sm lg:text-base">
+            <div className="flex items-center gap-2 lg:gap-3">
+              <Building className="w-4 h-4 lg:w-5 lg:h-5 text-unifio-primary" />
               Selecione o bloco
             </div>
           </Label>
           <Select value={selectedLocationId} onValueChange={setSelectedLocationId}>
-            <SelectTrigger className="h-14 bg-white border-gray-200 hover:border-unifio-primary transition-colors">
+            <SelectTrigger className="h-12 lg:h-14 bg-white border-gray-200 hover:border-unifio-primary transition-colors">
               <SelectValue placeholder="Escolha o bloco onde você está" />
             </SelectTrigger>
             <SelectContent>
-              {mockLocations.map((location) => (
-                <SelectItem key={location.id} value={location.id}>
+              {locations.map((location) => (
+                <SelectItem key={location.id} value={String(location.id)}>
                   <div className="flex items-center gap-3 py-2">
                     <Building className="w-4 h-4 text-unifio-primary" />
                     <div>
@@ -263,7 +273,10 @@ const NewOccurrencePageStudent: React.FC = () => {
               Quantas pessoas precisam de atendimento?
             </div>
           </Label>
-          <Select value={selectedPeopleCount} onValueChange={(value) => setSelectedPeopleCount(value as PeopleCount)}>
+            <Select
+              value={selectedPeopleCount}
+              onValueChange={(value: string) => setSelectedPeopleCount(value as PeopleCount)}
+            >
             <SelectTrigger className="h-14 bg-white border-gray-200 hover:border-unifio-primary transition-colors">
               <SelectValue placeholder="Selecione a quantidade de pessoas" />
             </SelectTrigger>
@@ -312,7 +325,7 @@ const NewOccurrencePageStudent: React.FC = () => {
             <AlertDescription className="text-blue-800">
               <div className="font-semibold mb-1">Resumo:</div>
               <div className="text-blue-700">
-                <strong>Local:</strong> {mockLocations.find(l => l.id === selectedLocationId)?.name}
+              <strong>Local:</strong> {locations.find(l => String(l.id) === selectedLocationId)?.name}
               </div>
               <div className="text-blue-700">
                 <strong>Pessoas:</strong> {peopleCountLabels[selectedPeopleCount]}
@@ -520,10 +533,10 @@ const NewOccurrencePageStudent: React.FC = () => {
               <div>
                 <span className="font-medium text-gray-900">Local:</span>
                 <div className="text-gray-600 mt-1">
-                  {selectedLocationId 
-                    ? mockLocations.find(l => l.id === selectedLocationId)?.name
-                    : 'Não informado'
-                  }
+                    {selectedLocationId 
+                      ? locations.find(l => String(l.id) === selectedLocationId)?.name
+                      : 'Não informado'
+                    }
                 </div>
                 {locationDescription && (
                   <div className="text-sm text-gray-500 mt-1 p-2 bg-gray-50 rounded">
@@ -662,26 +675,28 @@ const NewOccurrencePageStudent: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Mobile Navigation */}
+      <MobileNav />
+      
       {/* Header */}
       <div className="bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between py-4">
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-unifio-primary rounded-full flex items-center justify-center">
-                <Heart className="w-5 h-5 text-white" />
+          <div className="flex items-center justify-between py-3 lg:py-4">
+            <div className="flex items-center gap-3 lg:gap-4">
+              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-unifio-primary rounded-full flex items-center justify-center">
+                <Heart className="w-4 h-4 lg:w-5 lg:h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-semibold text-gray-900">SOS UNIFIO</h1>
-                <p className="text-sm text-gray-600">Solicitação de Atendimento Médico</p>
+                <h1 className="text-base lg:text-lg font-semibold text-gray-900">SOS UNIFIO</h1>
+                <p className="text-xs lg:text-sm text-gray-600 hidden sm:block">Solicitação de Atendimento Médico</p>
               </div>
             </div>
             
-            <div className="flex items-center gap-4">
-              <div className="text-right">
+            <div className="flex items-center gap-2 lg:gap-4">
+              <div className="text-right hidden lg:block">
                 <p className="text-sm font-medium text-gray-900">{user?.name}</p>
                 <p className="text-xs text-gray-600">
                   {user?.role === 'aluno' && user.ra && `RA: ${user.ra}`}
-                  {user?.role === 'professor' && 'Professor'}
                   {user?.role === 'colaborador' && 'Colaborador'}
                 </p>
               </div>
@@ -689,7 +704,7 @@ const NewOccurrencePageStudent: React.FC = () => {
                 variant="ghost"
                 size="sm"
                 onClick={handleLogout}
-                className="text-gray-600 hover:text-gray-900"
+                className="text-gray-600 hover:text-gray-900 hidden lg:flex"
               >
                 <LogOut className="w-4 h-4" />
               </Button>
@@ -700,11 +715,11 @@ const NewOccurrencePageStudent: React.FC = () => {
 
       {/* Progress Bar */}
       <div className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center gap-4">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-3 lg:py-4">
+          <div className="flex items-center gap-2 lg:gap-4">
             {/* Step 1: Location & People */}
-            <div className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+            <div className="flex items-center gap-1 lg:gap-2">
+              <div className={`w-6 h-6 lg:w-8 lg:h-8 rounded-full flex items-center justify-center text-xs lg:text-sm font-medium transition-colors ${
                 step === 'location' 
                   ? 'bg-unifio-primary text-white' 
                   : step === 'symptoms' || step === 'confirmation'
@@ -712,12 +727,12 @@ const NewOccurrencePageStudent: React.FC = () => {
                     : 'bg-gray-100 text-gray-500'
               }`}>
                 {step === 'symptoms' || step === 'confirmation' ? (
-                  <CheckCircle className="w-4 h-4" />
+                  <CheckCircle className="w-3 h-3 lg:w-4 lg:h-4" />
                 ) : (
                   '1'
                 )}
               </div>
-              <span className={`text-sm font-medium ${
+              <span className={`text-xs lg:text-sm font-medium hidden sm:inline ${
                 step === 'location' ? 'text-unifio-primary' : 'text-gray-600'
               }`}>
                 Local & Pessoas
@@ -729,8 +744,8 @@ const NewOccurrencePageStudent: React.FC = () => {
             }`} />
 
             {/* Step 2: Symptoms */}
-            <div className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+            <div className="flex items-center gap-1 lg:gap-2">
+              <div className={`w-6 h-6 lg:w-8 lg:h-8 rounded-full flex items-center justify-center text-xs lg:text-sm font-medium transition-colors ${
                 step === 'symptoms' 
                   ? 'bg-unifio-primary text-white' 
                   : step === 'confirmation'
@@ -738,12 +753,12 @@ const NewOccurrencePageStudent: React.FC = () => {
                     : 'bg-gray-100 text-gray-500'
               }`}>
                 {step === 'confirmation' ? (
-                  <CheckCircle className="w-4 h-4" />
+                  <CheckCircle className="w-3 h-3 lg:w-4 lg:h-4" />
                 ) : (
                   '2'
                 )}
               </div>
-              <span className={`text-sm font-medium ${
+              <span className={`text-xs lg:text-sm font-medium hidden sm:inline ${
                 step === 'symptoms' ? 'text-unifio-primary' : 'text-gray-600'
               }`}>
                 Sintomas
@@ -755,19 +770,19 @@ const NewOccurrencePageStudent: React.FC = () => {
             }`} />
 
             {/* Step 3: Confirmation */}
-            <div className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+            <div className="flex items-center gap-1 lg:gap-2">
+              <div className={`w-6 h-6 lg:w-8 lg:h-8 rounded-full flex items-center justify-center text-xs lg:text-sm font-medium transition-colors ${
                 step === 'confirmation' 
                   ? 'bg-unifio-primary text-white' 
                   : 'bg-gray-100 text-gray-500'
               }`}>
                 {step === 'confirmation' ? (
-                  <CheckCircle className="w-4 h-4" />
+                  <CheckCircle className="w-3 h-3 lg:w-4 lg:h-4" />
                 ) : (
                   '3'
                 )}
               </div>
-              <span className={`text-sm font-medium ${
+              <span className={`text-xs lg:text-sm font-medium hidden sm:inline ${
                 step === 'confirmation' ? 'text-unifio-primary' : 'text-gray-600'
               }`}>
                 Confirmação
@@ -778,16 +793,16 @@ const NewOccurrencePageStudent: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-8">
         {step === 'location' && renderLocationStep()}
         {step === 'symptoms' && renderSymptomsStep()}
         {step === 'confirmation' && renderConfirmationStep()}
       </div>
 
       {/* Emergency Contact */}
-      <div className="fixed bottom-6 right-6">
+      <div className="fixed bottom-4 right-4 lg:bottom-6 lg:right-6">
         <Button
-          className="bg-red-600 hover:bg-red-700 text-white shadow-lg h-14 px-6 rounded-full"
+          className="bg-red-600 hover:bg-red-700 text-white shadow-lg h-12 lg:h-14 px-4 lg:px-6 rounded-full text-sm lg:text-base"
           onClick={() => {
             toast('Em caso de emergência extrema, ligue 192 (SAMU) ou 193 (Bombeiros)', {
               duration: 6000,

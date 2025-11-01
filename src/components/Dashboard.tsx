@@ -4,7 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import TestCallButton from './TestCallButton';
+import TestRedirectedCallButton from './TestRedirectedCallButton';
 import EmergencyCallNotification from './EmergencyCallNotification';
+import MobileNav from './MobileNav';
 import { 
   AlertTriangle, 
   Clock, 
@@ -107,132 +109,108 @@ const Dashboard: React.FC = () => {
     switch (effectiveRole) {
       case 'professor':
         return (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-6">
             <Button 
               onClick={() => setCurrentPage('new-occurrence')} 
-              className="h-20 flex flex-col gap-2 bg-emergency-critical hover:bg-emergency-critical/90 text-white font-medium shadow-unifio"
+              className="h-16 lg:h-20 flex flex-col gap-1 lg:gap-2 bg-emergency-critical hover:bg-emergency-critical/90 text-white font-medium shadow-unifio"
             >
-              <Heart className="w-6 h-6" />
-              <span>Solicitar Atendimento</span>
+              <Heart className="w-5 h-5 lg:w-6 lg:h-6" />
+              <span className="text-sm lg:text-base">Solicitar Atendimento</span>
             </Button>
             <Button 
               variant="outline" 
               onClick={() => setCurrentPage('active-occurrences')}
-              className="h-20 flex flex-col gap-2 border-unifio-primary hover:bg-unifio-primary/5 text-unifio-primary border-2"
+              className="h-16 lg:h-20 flex flex-col gap-1 lg:gap-2 border-unifio-primary hover:bg-unifio-primary/5 text-unifio-primary border-2"
             >
-              <AlertTriangle className="w-6 h-6" />
-              <span>Ver Chamados Ativos</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => setCurrentPage('reports')}
-              className="h-20 flex flex-col gap-2 border-green-600 hover:bg-green-50 text-green-700 border-2"
-            >
-              <TrendingUp className="w-6 h-6" />
-              <span>Relatórios</span>
+              <AlertTriangle className="w-5 h-5 lg:w-6 lg:h-6" />
+              <span className="text-sm lg:text-base">Ver Chamados Ativos</span>
             </Button>
           </div>
         );
 
       case 'colaborador':
         return (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:gap-6">
             <Button 
               onClick={() => setCurrentPage('new-occurrence')} 
-              className="h-20 flex flex-col gap-2 bg-emergency-critical hover:bg-emergency-critical/90 text-white font-medium shadow-unifio"
+              className="h-16 lg:h-20 flex flex-col gap-1 lg:gap-2 bg-emergency-critical hover:bg-emergency-critical/90 text-white font-medium shadow-unifio"
             >
-              <Heart className="w-6 h-6" />
-              <span>Solicitar Atendimento</span>
+              <Heart className="w-5 h-5 lg:w-6 lg:h-6" />
+              <span className="text-sm lg:text-base">Solicitar Atendimento</span>
             </Button>
             <Button 
               variant="outline" 
               onClick={() => setCurrentPage('active-occurrences')}
-              className="h-20 flex flex-col gap-2 border-unifio-primary hover:bg-unifio-primary/5 text-unifio-primary border-2"
+              className="h-16 lg:h-20 flex flex-col gap-1 lg:gap-2 border-unifio-primary hover:bg-unifio-primary/5 text-unifio-primary border-2"
             >
-              <AlertTriangle className="w-6 h-6" />
-              <span>Ver Chamados Ativos</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => setCurrentPage('reports')}
-              className="h-20 flex flex-col gap-2 border-green-600 hover:bg-green-50 text-green-700 border-2"
-            >
-              <TrendingUp className="w-6 h-6" />
-              <span>Relatórios</span>
+              <AlertTriangle className="w-5 h-5 lg:w-6 lg:h-6" />
+              <span className="text-sm lg:text-base">Ver Chamados Ativos</span>
             </Button>
           </div>
         );
       
       case 'socorrista':
         return (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 lg:gap-4">
             <Button 
               onClick={() => setCurrentPage('active-occurrences')} 
-              className="h-16 flex flex-col gap-1 bg-unifio-primary hover:bg-unifio-primary/90 text-white"
+              className="h-14 lg:h-16 flex flex-col gap-1 bg-unifio-primary hover:bg-unifio-primary/90 text-white"
             >
               <AlertTriangle className="w-5 h-5" />
-              <span className="text-sm">Chamados Ativos</span>
+              <span className="text-xs lg:text-sm">Chamados Ativos</span>
             </Button>
             <Button 
               variant="outline" 
               onClick={() => setCurrentPage('my-assignments')}
-              className="h-16 flex flex-col gap-1 border-slate-300 hover:bg-slate-50"
+              className="h-14 lg:h-16 flex flex-col gap-1 border-slate-300 hover:bg-slate-50"
             >
               <Users className="w-5 h-5 text-slate-600" />
-              <span className="text-sm text-slate-700">Meus Atendimentos</span>
+              <span className="text-xs lg:text-sm text-slate-700">Meus Atendimentos</span>
             </Button>
             <Button 
               variant="outline" 
               onClick={() => setCurrentPage('history')}
-              className="h-16 flex flex-col gap-1 border-slate-300 hover:bg-slate-50"
+              className="h-14 lg:h-16 flex flex-col gap-1 border-slate-300 hover:bg-slate-50"
             >
               <CheckCircle className="w-5 h-5 text-slate-600" />
-              <span className="text-sm text-slate-700">Histórico</span>
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => setCurrentPage('reports')}
-              className="h-16 flex flex-col gap-1 border-green-600 hover:bg-green-50 text-green-700"
-            >
-              <TrendingUp className="w-5 h-5" />
-              <span className="text-sm">Relatórios</span>
+              <span className="text-xs lg:text-sm text-slate-700">Histórico</span>
             </Button>
           </div>
         );
       
       case 'administrador':
         return (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
             <Button 
               onClick={() => setCurrentPage('admin-users')} 
-              className="h-16 flex flex-col gap-1 bg-unifio-primary hover:bg-unifio-primary/90 text-white"
+              className="h-14 lg:h-16 flex flex-col gap-1 bg-unifio-primary hover:bg-unifio-primary/90 text-white"
             >
               <Users className="w-5 h-5" />
-              <span className="text-sm">Gerenciar Usuários</span>
+              <span className="text-xs lg:text-sm">Gerenciar Usuários</span>
             </Button>
             <Button 
               variant="outline" 
               onClick={() => setCurrentPage('admin-settings')}
-              className="h-16 flex flex-col gap-1 border-slate-300 hover:bg-slate-50"
+              className="h-14 lg:h-16 flex flex-col gap-1 border-slate-300 hover:bg-slate-50"
             >
               <Settings className="w-5 h-5 text-slate-600" />
-              <span className="text-sm text-slate-700">Configurações</span>
+              <span className="text-xs lg:text-sm text-slate-700">Configurações</span>
             </Button>
             <Button 
               variant="outline" 
               onClick={() => setCurrentPage('reports')}
-              className="h-16 flex flex-col gap-1 border-green-600 hover:bg-green-50 text-green-700"
+              className="h-14 lg:h-16 flex flex-col gap-1 border-green-600 hover:bg-green-50 text-green-700"
             >
               <TrendingUp className="w-5 h-5" />
-              <span className="text-sm">Relatórios Completos</span>
+              <span className="text-xs lg:text-sm">Relatórios Completos</span>
             </Button>
             <Button 
               variant="outline" 
               onClick={() => setCurrentPage('active-occurrences')}
-              className="h-16 flex flex-col gap-1 border-red-600 hover:bg-red-50 text-red-700"
+              className="h-14 lg:h-16 flex flex-col gap-1 border-red-600 hover:bg-red-50 text-red-700"
             >
               <AlertTriangle className="w-5 h-5" />
-              <span className="text-sm">Monitoramento</span>
+              <span className="text-xs lg:text-sm">Monitoramento</span>
             </Button>
           </div>
         );
@@ -254,40 +232,46 @@ const Dashboard: React.FC = () => {
       {/* Notificações de Chamados */}
       <EmergencyCallNotification />
       
+      {/* Mobile Navigation */}
+      <MobileNav />
+      
       {/* Botão de Teste para Socorristas */}
       <TestCallButton />
+      
+      {/* Botão de Teste de Redirecionamento para Socorristas e Colaboradores */}
+      <TestRedirectedCallButton />
 
       {/* Header */}
       <div className="bg-white border-b border-slate-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 lg:gap-4">
               <div className="flex items-center gap-2">
-                <Heart className="w-8 h-8 text-emergency-critical" />
-                <div className="text-2xl font-bold">
+                <Heart className="w-6 h-6 lg:w-8 lg:h-8 text-emergency-critical" />
+                <div className="text-xl lg:text-2xl font-bold">
                   <span className="text-unifio-primary">SOS</span>
                 </div>
               </div>
-              <div className="border-l border-slate-300 pl-4">
-                <div className="text-lg font-bold">
+              <div className="hidden sm:block border-l border-slate-300 pl-4">
+                <div className="text-base lg:text-lg font-bold">
                   <span className="text-unifio-primary">UNI</span>
                   <span className="text-unifio-secondary">FI</span>
                   <span className="text-unifio-primary">O</span>
                 </div>
-                <p className="text-sm text-slate-600">
+                <p className="text-xs lg:text-sm text-slate-600">
                   Sistema de Emergência Médica
                 </p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="text-right mr-3">
+            <div className="flex items-center gap-2 lg:gap-3">
+              <div className="hidden lg:block text-right mr-3">
                 <p className="text-sm font-medium text-slate-900">{user.name}</p>
                 <p className="text-xs text-slate-600">{user.email}</p>
               </div>
               
               {/* Indicador de notificações para equipe de resposta */}
               {(user.role === 'socorrista' || user.role === 'professor' || user.role === 'colaborador') && (
-                <div className="relative">
+                <div className="relative hidden lg:block">
                   <Button variant="ghost" size="sm" className="text-slate-600">
                     <Bell className="w-4 h-4" />
                   </Button>
@@ -299,7 +283,7 @@ const Dashboard: React.FC = () => {
                 </div>
               )}
               
-              <Badge className={`${getRoleColor(user.role)} border px-3 py-1`}>
+              <Badge className={`${getRoleColor(user.role)} border px-2 py-1 text-xs hidden sm:flex`}>
                 <Shield className="w-3 h-3 mr-1" />
                 {getRoleLabel(user.role)}
                 {user.role === 'administrador' && isAdminMode && (
@@ -313,7 +297,7 @@ const Dashboard: React.FC = () => {
                   variant={isAdminMode ? "default" : "outline"} 
                   size="sm" 
                   onClick={toggleAdminMode}
-                  className={`${
+                  className={`hidden lg:flex ${
                     isAdminMode 
                       ? "bg-unifio-primary hover:bg-unifio-primary/90 text-white" 
                       : "border-unifio-primary text-unifio-primary hover:bg-unifio-primary/5"
@@ -328,7 +312,7 @@ const Dashboard: React.FC = () => {
                 variant="ghost" 
                 size="sm" 
                 onClick={handleLogout} 
-                className="text-slate-600 hover:text-red-600"
+                className="text-slate-600 hover:text-red-600 hidden lg:flex"
               >
                 <LogOut className="w-4 h-4" />
               </Button>
@@ -337,20 +321,20 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="space-y-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 lg:py-8">
+        <div className="space-y-4 lg:space-y-8">
           {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-6">
             <Card className="border-slate-200 shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-slate-600">Chamados Ativos</CardTitle>
+                <CardTitle className="text-xs lg:text-sm font-medium text-slate-600">Chamados Ativos</CardTitle>
                 <AlertTriangle className="h-4 w-4 text-red-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-semibold text-slate-900">
+                <div className="text-xl lg:text-2xl font-semibold text-slate-900">
                   {allOccurrences.filter(o => ['aberto', 'triagem', 'em_atendimento', 'a_caminho', 'no_local'].includes(o.status)).length}
                 </div>
-                <p className="text-xs text-slate-600 mt-1">
+                <p className="text-[10px] lg:text-xs text-slate-600 mt-1">
                   Aguardando atendimento
                 </p>
               </CardContent>
@@ -358,14 +342,14 @@ const Dashboard: React.FC = () => {
 
             <Card className="border-slate-200 shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-slate-600">Emergências</CardTitle>
+                <CardTitle className="text-xs lg:text-sm font-medium text-slate-600">Emergências</CardTitle>
                 <Heart className="h-4 w-4 text-red-600" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-semibold text-red-600">
+                <div className="text-xl lg:text-2xl font-semibold text-red-600">
                   {allOccurrences.filter(o => o.type === 'emergencia' && o.status !== 'concluido').length}
                 </div>
-                <p className="text-xs text-slate-600 mt-1">
+                <p className="text-[10px] lg:text-xs text-slate-600 mt-1">
                   Alta prioridade
                 </p>
               </CardContent>
@@ -373,14 +357,14 @@ const Dashboard: React.FC = () => {
 
             <Card className="border-slate-200 shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-slate-600">Em Atendimento</CardTitle>
+                <CardTitle className="text-xs lg:text-sm font-medium text-slate-600">Em Atendimento</CardTitle>
                 <Users className="h-4 w-4 text-blue-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-semibold text-blue-600">
+                <div className="text-xl lg:text-2xl font-semibold text-blue-600">
                   {allOccurrences.filter(o => ['em_atendimento', 'no_local'].includes(o.status)).length}
                 </div>
-                <p className="text-xs text-slate-600 mt-1">
+                <p className="text-[10px] lg:text-xs text-slate-600 mt-1">
                   Socorristas ativos
                 </p>
               </CardContent>
@@ -388,14 +372,14 @@ const Dashboard: React.FC = () => {
 
             <Card className="border-slate-200 shadow-sm">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-slate-600">Concluídos Hoje</CardTitle>
+                <CardTitle className="text-xs lg:text-sm font-medium text-slate-600">Concluídos Hoje</CardTitle>
                 <CheckCircle className="h-4 w-4 text-green-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-semibold text-green-600">
+                <div className="text-xl lg:text-2xl font-semibold text-green-600">
                   {allOccurrences.filter(o => o.status === 'concluido').length}
                 </div>
-                <p className="text-xs text-slate-600 mt-1">
+                <p className="text-[10px] lg:text-xs text-slate-600 mt-1">
                   Atendimentos finalizados
                 </p>
               </CardContent>
@@ -405,11 +389,16 @@ const Dashboard: React.FC = () => {
           {/* Quick Actions */}
           <Card className="border-slate-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-slate-900 font-semibold">
+              <CardTitle className="text-base lg:text-lg text-slate-900 font-semibold">
                 Ações Rápidas
                 {user.role === 'socorrista' && (
-                  <span className="ml-2 text-sm font-normal text-slate-600">
-                    • Use o botão de teste no canto da tela para simular chamados
+                  <span className="hidden lg:inline ml-2 text-sm font-normal text-slate-600">
+                    • Botões de teste: vermelho (novo chamado) e roxo (redirecionado)
+                  </span>
+                )}
+                {user.role === 'colaborador' && (
+                  <span className="hidden lg:inline ml-2 text-sm font-normal text-slate-600">
+                    • Use o botão roxo para simular chamados redirecionados
                   </span>
                 )}
               </CardTitle>
@@ -422,7 +411,7 @@ const Dashboard: React.FC = () => {
           {/* Recent Occurrences */}
           <Card className="border-slate-200 shadow-sm">
             <CardHeader>
-              <CardTitle className="text-slate-900 font-semibold">
+              <CardTitle className="text-base lg:text-lg text-slate-900 font-semibold">
                 Ocorrências Recentes
                 {simulatedOccurrences && simulatedOccurrences.length > 0 && (
                   <Badge className="ml-2 bg-blue-100 text-blue-700 text-xs">

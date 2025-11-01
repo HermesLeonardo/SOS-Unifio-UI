@@ -183,23 +183,47 @@ export interface IncomingCall {
 export interface AppContextType {
   user: User | null;
   setUser: (user: User | null) => void;
+
   currentPage: string;
   setCurrentPage: (page: string) => void;
+
   activeOccurrence: Occurrence | null;
   setActiveOccurrence: (occurrence: Occurrence | null) => void;
+
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
-  // New simulation features
+
+  // Chamadas simuladas e ocorrências
   incomingCalls: IncomingCall[];
+  setIncomingCalls: (calls: IncomingCall[]) => void;
   simulatedOccurrences: Occurrence[];
+  setSimulatedOccurrences: (occurrences: Occurrence[]) => void;
+
+  // Lista de respondedores disponíveis
+  availableResponders: User[];
+
+  // Funções de simulação e resposta
   simulateEmergencyCall: () => IncomingCall;
   acceptCall: (callId: string) => Occurrence | null;
   rejectCall: (callId: string) => void;
-  // Admin mode functionality
+  handleCallTimeout: (callId: string) => void;
+
+  // Estado e controle de modo admin
   isAdminMode: boolean;
   toggleAdminMode: () => void;
+
+  // Funções de autenticação
+  login: (email: string, role: string, ra?: string) => void;
+  logout: () => void;
+
+  // Atualizações e navegação
+  updateUser: (updates: Partial<User>) => void;
+  updateActiveOccurrence: (updates: Partial<Occurrence>) => void;
   hasPermission: (permission: string) => boolean;
+  getAppState: () => any;
+  goToHomePage: () => void;
 }
+
 
 // API Response types
 export interface ApiResponse<T> {

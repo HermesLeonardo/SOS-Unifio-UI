@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Occurrence, AppContextType } from '../types';
 import { mockLocations, symptomLabels } from '../data/mockData';
+import { toast } from 'sonner';
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -12,6 +13,7 @@ interface IncomingCall {
   id: string;
   occurrence: Occurrence;
   timestamp: string;
+  attemptedRespondersIds?: string[]; // Rastreamento de quem já recebeu este chamado
 }
 
 export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
@@ -22,6 +24,54 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [incomingCalls, setIncomingCalls] = useState<IncomingCall[]>([]);
   const [simulatedOccurrences, setSimulatedOccurrences] = useState<Occurrence[]>([]);
   const [isAdminMode, setIsAdminMode] = useState<boolean>(false);
+  
+  // Lista de socorristas e colaboradores disponíveis (mock)
+  const [availableResponders] = useState<User[]>([
+    {
+      id: 'resp-1',
+      name: 'Rafael Santos Lima',
+      email: 'rafael.lima@unifio.edu.br',
+      role: 'socorrista',
+      phone: '(11) 95555-2222',
+      department: 'Ambulatório',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      lastLogin: new Date().toISOString()
+    },
+    {
+      id: 'resp-2',
+      name: 'Fernanda Rodrigues Silva',
+      email: 'fernanda.silva@unifio.edu.br',
+      role: 'socorrista',
+      phone: '(11) 94444-3333',
+      department: 'Ambulatório',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      lastLogin: new Date().toISOString()
+    },
+    {
+      id: 'resp-3',
+      name: 'Dr. Carlos Eduardo Mendes',
+      email: 'carlos.mendes@unifio.edu.br',
+      role: 'colaborador',
+      phone: '(11) 97777-9999',
+      department: 'Enfermagem',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      lastLogin: new Date().toISOString()
+    },
+    {
+      id: 'resp-4',
+      name: 'Ana Paula Ferreira',
+      email: 'ana.ferreira@unifio.edu.br',
+      role: 'colaborador',
+      phone: '(11) 96666-1111',
+      department: 'Ambulatório',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+      lastLogin: new Date().toISOString()
+    }
+  ]);
 
   // Carregar dados persistidos do localStorage
   useEffect(() => {
@@ -30,6 +80,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       const savedPage = localStorage.getItem('sos-unifio-page');
       const savedOccurrence = localStorage.getItem('sos-unifio-active-occurrence');
       const savedAdminMode = localStorage.getItem('sos-unifio-admin-mode');
+      const savedSimulatedOccurrences = localStorage.getItem('sos-unifio-simulated-occurrences');
+      const savedIncomingCalls = localStorage.getItem('sos-unifio-incoming-calls');
 
       if (savedUser) {
         const parsedUser = JSON.parse(savedUser);
@@ -59,6 +111,18 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         const parsedOccurrence = JSON.parse(savedOccurrence);
         setActiveOccurrence(parsedOccurrence);
       }
+
+      // Restaurar ocorrências simuladas
+      if (savedSimulatedOccurrences) {
+        const parsedOccurrences = JSON.parse(savedSimulatedOccurrences);
+        setSimulatedOccurrences(parsedOccurrences);
+      }
+
+      // Restaurar chamadas recebidas
+      if (savedIncomingCalls) {
+        const parsedCalls = JSON.parse(savedIncomingCalls);
+        setIncomingCalls(parsedCalls);
+      }
     } catch (error) {
       console.error('Erro ao carregar dados salvos:', error);
       // Limpar dados corrompidos
@@ -66,6 +130,8 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       localStorage.removeItem('sos-unifio-page');
       localStorage.removeItem('sos-unifio-active-occurrence');
       localStorage.removeItem('sos-unifio-admin-mode');
+      localStorage.removeItem('sos-unifio-simulated-occurrences');
+      localStorage.removeItem('sos-unifio-incoming-calls');
     }
   }, []);
 
@@ -165,21 +231,24 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const acceptCall = (callId: string) => {
     const call = incomingCalls.find(c => c.id === callId);
     if (call && user) {
-      // Atualizar status da ocorrência
-      const updatedOccurrence = {
+      const updatedOccurrence: Occurrence = {
         ...call.occurrence,
-        status: 'em_atendimento' as any,
+        status: 'em_atendimento',
         assignedTo: user,
-        responders: [user],
+        responders: [{
+          userId: user.id,
+          user,
+          role: user.role === 'socorrista' ? 'socorrista' : 'funcionario',
+          status: 'confirmado',
+          confirmedAt: new Date().toISOString()
+        }],
         updatedAt: new Date().toISOString()
       };
 
-      // Atualizar nas listas
-      setSimulatedOccurrences(prev => 
+      setSimulatedOccurrences(prev =>
         prev.map(occ => occ.id === call.occurrence.id ? updatedOccurrence : occ)
       );
 
-      // Remover da lista de chamadas pendentes
       setIncomingCalls(prev => prev.filter(c => c.id !== callId));
 
       return updatedOccurrence;
@@ -187,9 +256,100 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     return null;
   };
 
-  // Função para rejeitar chamado
+
+  // Função para redirecionar chamado para outro respondedor
+  const redirectCallToNextResponder = (call: IncomingCall) => {
+    const attemptedIds = call.attemptedRespondersIds || [];
+    const currentUserId = user?.id;
+    
+    // Adicionar usuário atual à lista de quem já recebeu
+    if (currentUserId && !attemptedIds.includes(currentUserId)) {
+      attemptedIds.push(currentUserId);
+    }
+    
+    // Encontrar próximo respondedor disponível
+    // Prioridade: 1) Socorristas, 2) Colaboradores
+    const socorristas = availableResponders.filter(r => 
+      r.role === 'socorrista' && !attemptedIds.includes(r.id)
+    );
+    const colaboradores = availableResponders.filter(r => 
+      r.role === 'colaborador' && !attemptedIds.includes(r.id)
+    );
+    
+    const nextResponder = socorristas.length > 0 
+      ? socorristas[0] 
+      : colaboradores.length > 0 
+        ? colaboradores[0] 
+        : null;
+    
+    if (nextResponder) {
+      // Criar nova chamada para o próximo respondedor
+      const redirectedCall: IncomingCall = {
+        ...call,
+        id: `call-${Date.now()}`, // Novo ID para a chamada redirecionada
+        timestamp: new Date().toISOString(),
+        attemptedRespondersIds: attemptedIds
+      };
+      
+      // Adicionar chamada para o próximo respondedor (simula notificação)
+      setIncomingCalls(prev => [...prev.filter(c => c.id !== call.id), redirectedCall]);
+      
+      console.log(`Chamado redirecionado para ${nextResponder.name} (${nextResponder.role})`);
+      
+      // Notificação de sistema (agendada para após o render)
+      setTimeout(() => {
+        toast.success('Sistema de Redirecionamento', {
+          description: `Chamado enviado para ${nextResponder.name} (${nextResponder.role === 'socorrista' ? 'Socorrista' : 'Colaborador'})`,
+          duration: 4000,
+        });
+      }, 0);
+      
+      return true;
+    } else {
+      // Nenhum respondedor disponível - manter chamado na fila
+      console.warn('Nenhum respondedor disponível. Chamado permanece na fila.');
+      
+      // Notificação de sistema (agendada para após o render)
+      setTimeout(() => {
+        toast.warning('Atenção: Todos os respondedores foram notificados', {
+          description: 'O chamado permanece ativo aguardando disponibilidade. Considere contatar SAMU (192) se for emergência crítica.',
+          duration: 8000,
+        });
+      }, 0);
+      
+      return false;
+    }
+  };
+  
+  // Função para rejeitar chamado e redirecionar
   const rejectCall = (callId: string) => {
-    setIncomingCalls(prev => prev.filter(c => c.id !== callId));
+    const call = incomingCalls.find(c => c.id === callId);
+    
+    if (call) {
+      // Tentar redirecionar antes de remover
+      const redirected = redirectCallToNextResponder(call);
+      
+      if (!redirected) {
+        // Se não conseguiu redirecionar, apenas remove da lista do usuário atual
+        setIncomingCalls(prev => prev.filter(c => c.id !== callId));
+      }
+    }
+  };
+  
+  // Função para quando o timer expirar
+  const handleCallTimeout = (callId: string) => {
+    const call = incomingCalls.find(c => c.id === callId);
+    
+    if (call) {
+      console.log('Timer expirado para chamado:', call.id);
+      // Redirecionar automaticamente
+      const redirected = redirectCallToNextResponder(call);
+      
+      if (!redirected) {
+        // Se não conseguiu redirecionar, remove da lista
+        setIncomingCalls(prev => prev.filter(c => c.id !== callId));
+      }
+    }
   };
 
   // Função customizada para definir usuário com redirecionamento inteligente
@@ -230,6 +390,24 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
       localStorage.removeItem('sos-unifio-active-occurrence');
     }
   }, [activeOccurrence]);
+
+  // Persistir ocorrências simuladas
+  useEffect(() => {
+    if (simulatedOccurrences.length > 0) {
+      localStorage.setItem('sos-unifio-simulated-occurrences', JSON.stringify(simulatedOccurrences));
+    } else {
+      localStorage.removeItem('sos-unifio-simulated-occurrences');
+    }
+  }, [simulatedOccurrences]);
+
+  // Persistir chamadas recebidas
+  useEffect(() => {
+    if (incomingCalls.length > 0) {
+      localStorage.setItem('sos-unifio-incoming-calls', JSON.stringify(incomingCalls));
+    } else {
+      localStorage.removeItem('sos-unifio-incoming-calls');
+    }
+  }, [incomingCalls]);
 
   // Função para alternar modo admin (apenas para administradores)
   const toggleAdminMode = () => {
@@ -447,10 +625,14 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
     setIsLoading,
     // Novas funções para simulação
     incomingCalls,
+    setIncomingCalls,
     simulatedOccurrences,
+    setSimulatedOccurrences,
+    availableResponders,
     simulateEmergencyCall,
     acceptCall,
     rejectCall,
+    handleCallTimeout,
     // Estado do modo admin
     isAdminMode,
     toggleAdminMode,

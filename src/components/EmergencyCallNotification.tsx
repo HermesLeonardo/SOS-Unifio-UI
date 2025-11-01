@@ -18,17 +18,21 @@ import {
   Info,
   ChevronUp,
   Users,
-  UserPlus
+  UserPlus,
+  RotateCcw
 } from 'lucide-react';
 import { toast } from 'sonner@2.0.3';
 
 const EmergencyCallNotification: React.FC = () => {
-  const { user, incomingCalls, acceptCall, rejectCall, setActiveOccurrence, setCurrentPage } = useApp() as any;
+  const { user, incomingCalls, acceptCall, rejectCall, handleCallTimeout, setActiveOccurrence, setCurrentPage } = useApp() as any;
   const [currentCall, setCurrentCall] = useState<any>(null);
   const [isVisible, setIsVisible] = useState(false);
   const [timeRemaining, setTimeRemaining] = useState(90); // 1.5 minutos = 90 segundos
   const [isPulsing, setIsPulsing] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [shouldShowToast, setShouldShowToast] = useState(false);
+  const [toastData, setToastData] = useState<any>(null);
+  const [hasTimedOut, setHasTimedOut] = useState(false);
 
   // Mostrar notificação quando houver novos chamados
   useEffect(() => {
@@ -40,20 +44,36 @@ const EmergencyCallNotification: React.FC = () => {
         setIsMinimized(false);
         setTimeRemaining(90); // Reset timer para 1.5 minutos
         setIsPulsing(false);
+        setHasTimedOut(false); // Reset timeout flag
         
-        // Som de notificação (simulado com toast)
-        toast('🚨 Novo Chamado de Emergência!', {
-          description: `${latestCall.occurrence.user.name} - ${latestCall.occurrence.type.toUpperCase()} - ${peopleCountLabels[latestCall.occurrence.peopleCount]}`,
-          duration: 8000,
+        // Preparar dados do toast para próximo efeito
+        setToastData({
+          name: latestCall.occurrence.user.name,
+          type: latestCall.occurrence.type.toUpperCase(),
+          peopleCount: peopleCountLabels[latestCall.occurrence.peopleCount]
         });
+        setShouldShowToast(true);
       }
     } else if (incomingCalls?.length === 0) {
       setIsVisible(false);
       setCurrentCall(null);
       setIsMinimized(false);
       setIsPulsing(false);
+      setHasTimedOut(false);
     }
   }, [incomingCalls, currentCall, user]);
+
+  // Efeito separado para mostrar toast (evita setState durante render)
+  useEffect(() => {
+    if (shouldShowToast && toastData) {
+      toast('🚨 Novo Chamado de Emergência!', {
+        description: `${toastData.name} - ${toastData.type} - ${toastData.peopleCount}`,
+        duration: 8000,
+      });
+      setShouldShowToast(false);
+      setToastData(null);
+    }
+  }, [shouldShowToast, toastData]);
 
   // Timer countdown
   useEffect(() => {
@@ -63,9 +83,6 @@ const EmergencyCallNotification: React.FC = () => {
       interval = setInterval(() => {
         setTimeRemaining(prev => {
           if (prev <= 1) {
-            // Quando o tempo acabar, minimizar e começar a piscar
-            setIsMinimized(true);
-            setIsPulsing(true);
             return 0;
           }
           return prev - 1;
@@ -77,6 +94,29 @@ const EmergencyCallNotification: React.FC = () => {
       if (interval) clearInterval(interval);
     };
   }, [isVisible, currentCall, timeRemaining]);
+
+  // Efeito separado para lidar com timeout
+  useEffect(() => {
+    if (timeRemaining === 0 && isVisible && currentCall && !hasTimedOut) {
+      setHasTimedOut(true); // Marcar como processado
+      
+      // Executar timeout em um macrotask para evitar setState durante render
+      setTimeout(() => {
+        if (handleCallTimeout) {
+          handleCallTimeout(currentCall.id);
+        }
+        toast.info('Tempo esgotado', {
+          description: 'O chamado foi redirecionado para outro socorrista/colaborador.',
+          duration: 5000,
+        });
+        // Fechar notificação
+        setIsVisible(false);
+        setCurrentCall(null);
+        setIsMinimized(false);
+        setIsPulsing(false);
+      }, 0);
+    }
+  }, [timeRemaining, isVisible, currentCall, hasTimedOut, handleCallTimeout]);
 
   const handleAccept = () => {
     if (currentCall) {
@@ -96,8 +136,9 @@ const EmergencyCallNotification: React.FC = () => {
   const handleReject = () => {
     if (currentCall) {
       rejectCall(currentCall.id);
-      toast('Chamado rejeitado', {
-        description: 'O chamado será oferecido para outros socorristas.',
+      toast.info('Chamado rejeitado', {
+        description: 'O chamado foi redirecionado automaticamente para outro socorrista ou colaborador disponível.',
+        duration: 5000,
       });
       setIsVisible(false);
       setCurrentCall(null);
@@ -152,7 +193,8 @@ const EmergencyCallNotification: React.FC = () => {
     return null;
   }
 
-  const { occurrence } = currentCall;
+  const { occurrence, attemptedRespondersIds } = currentCall;
+  const isRedirected = attemptedRespondersIds && attemptedRespondersIds.length > 0;
   
   // Função para obter ícone de pessoas
   const getPeopleIcon = (peopleCount: string) => {
@@ -460,6 +502,22 @@ const EmergencyCallNotification: React.FC = () => {
             </div>
           )}
 
+          {/* Alerta de Chamado Redirecionado */}
+          {isRedirected && (
+            <div className="bg-purple-50 border-l-4 border-purple-400 p-4 rounded-r-lg">
+              <div className="flex items-start gap-3">
+                <RotateCcw className="w-5 h-5 text-purple-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h4 className="font-semibold text-purple-800">Chamado Redirecionado</h4>
+                  <p className="text-sm text-purple-700 mt-1">
+                    Este chamado já foi enviado para {attemptedRespondersIds.length} {attemptedRespondersIds.length === 1 ? 'outro respondedor' : 'outros respondedores'} que não puderam atender. 
+                    Você está recebendo este chamado automaticamente pelo sistema de redirecionamento.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Aviso de tempo */}
           {timeRemaining <= 30 && timeRemaining > 0 && (
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
@@ -468,7 +526,7 @@ const EmergencyCallNotification: React.FC = () => {
                 <div>
                   <h4 className="font-semibold text-yellow-800">Tempo Limitado</h4>
                   <p className="text-sm text-yellow-700 mt-1">
-                    Este chamado será oferecido para outros socorristas em {formatTime(timeRemaining)}.
+                    Este chamado será automaticamente redirecionado para outro socorrista/colaborador em {formatTime(timeRemaining)}.
                   </p>
                 </div>
               </div>

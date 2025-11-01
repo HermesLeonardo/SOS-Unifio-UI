@@ -26,15 +26,49 @@ import {
   ClipboardCheck,
   Send
 } from 'lucide-react';
+import { occurrenceService } from "../services/occurrenceService";
+
 
 const OccurrenceStatusPage: React.FC = () => {
   const { user, setCurrentPage, activeOccurrence } = useApp();
   const [showChat, setShowChat] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showCompletionForm, setShowCompletionForm] = useState(false);
-  
+
   // Usar ocorrência ativa ou a primeira da lista para demonstração
-  const occurrence = activeOccurrence || mockOccurrences[0];
+  const occurrence = activeOccurrence || {
+    id: "TEMP-001",
+    status: "aberto",
+    type: "urgencia",
+    priority: "alta",
+    createdAt: new Date().toISOString(),
+    user: { name: "Usuário Teste" },
+    location: { name: "Local não informado" },
+    description: "Nenhuma descrição disponível",
+    symptoms: [],
+  };
+
+const [realOccurrence, setRealOccurrence] = useState<any | null>(null);
+const data = realOccurrence || occurrence;
+
+  useEffect(() => {
+    console.log("activeOccurrence recebido:", activeOccurrence);
+    async function fetchOccurrence() {
+      try {
+        const data = await occurrenceService.getById(Number(activeOccurrence?.id));
+        console.log("Dados recebidos do backend:", data);
+        setRealOccurrence(data);
+      } catch (err) {
+        console.error("Erro ao carregar ocorrência:", err);
+      }
+    }
+
+    if (activeOccurrence?.id) {
+      fetchOccurrence();
+    }
+  }, [activeOccurrence]);
+
+
   
   // Estados simplificados: apenas 3 etapas
   const statusSteps = [
@@ -160,7 +194,7 @@ const OccurrenceStatusPage: React.FC = () => {
   // Verificar se o usuário é socorrista e se pode concluir o chamado
   const canCompleteCall = user?.role === 'socorrista' && 
     ['em_atendimento', 'no_local'].includes(occurrence.status) &&
-    occurrence.assignedTo?.id === user.id;
+    realOccurrence?.a02_socorrista_id === user.id;
 
   const handleCompleteCall = () => {
     setShowCompletionForm(true);
@@ -196,9 +230,9 @@ const OccurrenceStatusPage: React.FC = () => {
                   <h1 className="text-xl font-semibold text-slate-900">
                     Status do Atendimento - SOS UNIFIO
                   </h1>
-                  <p className="text-sm text-slate-600">
-                    Protocolo: EMG-{occurrence.id.toUpperCase().slice(-6)}
-                  </p>
+                    <p className="text-sm text-slate-600">
+                      Protocolo: {realOccurrence?.a02_id ? `EMG-${realOccurrence.a02_id}` : `EMG-${occurrence.id}`}
+                    </p>
                 </div>
               </div>
             </div>
@@ -353,13 +387,13 @@ const OccurrenceStatusPage: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-blue-600" />
                       <span className="text-sm font-medium text-slate-700">Local:</span>
-                      <span className="text-sm text-slate-900">{occurrence.location?.name || 'Local não informado'}</span>
+                      <span className="text-sm text-slate-900">{realOccurrence?.local_nome || occurrence.location?.name || 'Local não informado'}</span>
                     </div>
                     
                     <div className="flex items-center gap-2">
                       <User className="w-4 h-4 text-purple-600" />
                       <span className="text-sm font-medium text-slate-700">Solicitante:</span>
-                      <span className="text-sm text-slate-900">{occurrence.user.name}</span>
+                      <span className="text-sm text-slate-900">{realOccurrence?.usuario_nome || occurrence.user.name}</span>
                     </div>
                   </div>
                   
@@ -368,7 +402,7 @@ const OccurrenceStatusPage: React.FC = () => {
                       <Clock className="w-4 h-4 text-green-600" />
                       <span className="text-sm font-medium text-slate-700">Hora do Chamado:</span>
                       <span className="text-sm text-slate-900">
-                        {new Date(occurrence.createdAt).toLocaleTimeString('pt-BR', {
+                        {new Date(realOccurrence?.a02_data_abertura || occurrence.createdAt).toLocaleTimeString('pt-BR', {
                           hour: '2-digit',
                           minute: '2-digit'
                         })}
@@ -407,27 +441,35 @@ const OccurrenceStatusPage: React.FC = () => {
                     {occurrence.description && (
                       <>
                         <h4 className="font-medium text-slate-900 mt-4">Descrição Adicional:</h4>
-                        <p className="text-slate-700 bg-slate-50 p-3 rounded-lg">{occurrence.description}</p>
+                        <p className="text-slate-700 bg-slate-50 p-3 rounded-lg">
+                          {realOccurrence?.a02_descricao || occurrence.description}
+                        </p>
+
+                        {realOccurrence?.a02_detalhe_local && (
+                          <p className="text-sm text-slate-600 mt-2">
+                            Detalhes: {realOccurrence.a02_detalhe_local}
+                          </p>
+                        )}
                       </>
                     )}
                   </div>
                 </div>
 
-                {/* Equipe Designada */}
-                {occurrence.assignedTo && (
-                  <div className="pt-4 border-t border-slate-200">
-                    <h4 className="font-medium text-slate-900 mb-2">Socorrista Designado:</h4>
-                    <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                      <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-                        <User className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <p className="font-medium text-slate-900">{occurrence.assignedTo.name}</p>
-                        <p className="text-sm text-green-600">Socorrista Responsável</p>
-                      </div>
+              {/* Equipe Designada */}
+              {realOccurrence?.socorrista_nome && (
+                <div className="pt-4 border-t border-slate-200">
+                  <h4 className="font-medium text-slate-900 mb-2">Socorrista Designado:</h4>
+                  <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                    <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                      <User className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-900">{realOccurrence.socorrista_nome}</p>
+                      <p className="text-sm text-green-600">Socorrista Responsável</p>
                     </div>
                   </div>
-                )}
+                </div>
+              )}
               </CardContent>
             </Card>
 
@@ -468,7 +510,11 @@ const OccurrenceStatusPage: React.FC = () => {
               <MedicalChatBot 
                 userSymptoms={occurrence.symptoms.map(s => symptomLabels[s]).join(', ')}
                 occurrenceId={occurrence.id}
-                priority={occurrence.priority}
+                priority={
+                  realOccurrence?.a02_prioridade === 'critica'
+                    ? 'alta'
+                    : (realOccurrence?.a02_prioridade as 'baixa' | 'media' | 'alta') || 'alta'
+                }
               />
             ) : (
               <Card className="border-slate-200 h-[600px] flex flex-col shadow-sm">
