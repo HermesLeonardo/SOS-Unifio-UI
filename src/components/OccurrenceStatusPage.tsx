@@ -368,7 +368,7 @@ const data = realOccurrence || occurrence;
               </CardContent>
             </Card>
 
-            {/* Detalhes da Ocorrência */}
+           {/* Detalhes da Ocorrência */}
             <Card className="border-slate-200 shadow-sm">
               <CardHeader>
                 <CardTitle className="text-slate-900">Informações do Chamado</CardTitle>
@@ -379,97 +379,83 @@ const data = realOccurrence || occurrence;
                     <div className="flex items-center gap-2">
                       <AlertTriangle className="w-4 h-4 text-orange-600" />
                       <span className="text-sm font-medium text-slate-700">Prioridade:</span>
-                      <Badge className={`${getPriorityColor(occurrence.priority)} border text-xs`}>
-                        {occurrence.priority.toUpperCase()}
+                      <Badge className="bg-red-100 text-red-700 border border-red-200 text-xs">
+                        ALTA
                       </Badge>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       <MapPin className="w-4 h-4 text-blue-600" />
                       <span className="text-sm font-medium text-slate-700">Local:</span>
-                      <span className="text-sm text-slate-900">{realOccurrence?.local_nome || occurrence.location?.name || 'Local não informado'}</span>
+                      <span className="text-sm text-slate-900">
+                        {realOccurrence?.local_nome || 'Local não informado'}
+                      </span>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       <User className="w-4 h-4 text-purple-600" />
                       <span className="text-sm font-medium text-slate-700">Solicitante:</span>
-                      <span className="text-sm text-slate-900">{realOccurrence?.usuario_nome || occurrence.user.name}</span>
+                      <span className="text-sm text-slate-900">
+                        {realOccurrence?.usuario_nome || 'Usuário não identificado'}
+                      </span>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-green-600" />
                       <span className="text-sm font-medium text-slate-700">Hora do Chamado:</span>
                       <span className="text-sm text-slate-900">
-                        {new Date(realOccurrence?.a02_data_abertura || occurrence.createdAt).toLocaleTimeString('pt-BR', {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
+                        {realOccurrence?.a02_data_abertura
+                          ? new Date(realOccurrence.a02_data_abertura).toLocaleTimeString('pt-BR', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          : '--:--'}
                       </span>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       <Timer className="w-4 h-4 text-orange-600" />
                       <span className="text-sm font-medium text-slate-700">Tempo Decorrido:</span>
                       <span className="text-sm text-slate-900">{elapsedTime} minutos</span>
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       <Navigation className="w-4 h-4 text-blue-600" />
                       <span className="text-sm font-medium text-slate-700">Situação:</span>
-                      <span className="text-sm text-slate-900">{getEstimatedTime()}</span>
+                      <span className="text-sm text-slate-900">Aguardando designação de socorrista</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-slate-200">
-                  <div className="space-y-2">
-                    <h4 className="font-medium text-slate-900">Sintomas Relatados:</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {occurrence.symptoms.map(symptom => (
-                        <Badge 
-                          key={symptom} 
-                          variant="secondary" 
-                          className="bg-slate-100 text-slate-700"
-                        >
-                          {symptomLabels[symptom]}
-                        </Badge>
-                      ))}
-                    </div>
-                    
-                    {occurrence.description && (
-                      <>
-                        <h4 className="font-medium text-slate-900 mt-4">Descrição Adicional:</h4>
-                        <p className="text-slate-700 bg-slate-50 p-3 rounded-lg">
-                          {realOccurrence?.a02_descricao || occurrence.description}
-                        </p>
+                <div className="pt-4 border-t border-slate-200 space-y-2">
+                  <h4 className="font-medium text-slate-900">Descrição Adicional:</h4>
+                  <p className="text-slate-700 bg-slate-50 p-3 rounded-lg">
+                    {realOccurrence?.a02_descricao || 'Nenhuma descrição disponível'}
+                  </p>
 
-                        {realOccurrence?.a02_detalhe_local && (
-                          <p className="text-sm text-slate-600 mt-2">
-                            Detalhes: {realOccurrence.a02_detalhe_local}
-                          </p>
-                        )}
-                      </>
-                    )}
-                  </div>
+                  {realOccurrence?.a02_detalhe_local && (
+                    <p className="text-sm text-slate-600">
+                      Detalhes: {realOccurrence.a02_detalhe_local}
+                    </p>
+                  )}
                 </div>
 
-              {/* Equipe Designada */}
-              {realOccurrence?.socorrista_nome && (
-                <div className="pt-4 border-t border-slate-200">
-                  <h4 className="font-medium text-slate-900 mb-2">Socorrista Designado:</h4>
-                  <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
-                      <User className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                      <p className="font-medium text-slate-900">{realOccurrence.socorrista_nome}</p>
-                      <p className="text-sm text-green-600">Socorrista Responsável</p>
+                {realOccurrence?.socorrista_nome && (
+                  <div className="pt-4 border-t border-slate-200">
+                    <h4 className="font-medium text-slate-900 mb-2">Socorrista Designado:</h4>
+                    <div className="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                        <User className="w-5 h-5 text-white" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-slate-900">{realOccurrence.socorrista_nome}</p>
+                        <p className="text-sm text-green-600">Socorrista Responsável</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
+                )}
               </CardContent>
             </Card>
 

@@ -128,6 +128,37 @@ const NewOccurrencePageStudent: React.FC = () => {
       });
       
       toast.success("Chamado enviado com sucesso!");
+      if (result?.id || result?.a02_id) {
+        setActiveOccurrence({
+          id: String(result?.id || result?.a02_id || "0"),
+          userId: String(user?.id || "0"),
+          status: "aberto",
+          type: "urgencia",
+          priority: "alta",
+          locationMethod: "manual",
+          peopleCount: "1" as PeopleCount,
+          user: {
+            id: String(user?.id || "0"),
+            name: user?.name || "Usuário",
+            email: user?.email || "",
+            role: user?.role || "aluno",
+            isActive: true,
+            createdAt: new Date().toISOString(),
+          },
+          location: {
+            id: String(0),
+            name: "Local não informado",
+            type: "bloco",
+            isActive: true,
+          },
+          responders: [],
+          observations: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          description: "",
+          symptoms: [],
+        });
+      }
       setStep("confirmation");
     } catch (error: any) {
       console.error(error);
