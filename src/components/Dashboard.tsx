@@ -1,4 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { toast } from "sonner";
+import { io } from "socket.io-client";
+import { API_URL } from "../services/api"; 
 import { useApp } from '../contexts/AppContext';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -6,6 +9,7 @@ import { Badge } from './ui/badge';
 import TestCallButton from './TestCallButton';
 import TestRedirectedCallButton from './TestRedirectedCallButton';
 import EmergencyCallNotification from './EmergencyCallNotification';
+import { showEmergencyNotificationFromSocket } from './EmergencyCallNotification';
 import MobileNav from './MobileNav';
 import { 
   AlertTriangle, 
@@ -25,6 +29,14 @@ import {
   UserCog
 } from 'lucide-react';
 import { mockOccurrences, symptomLabels } from '../data/mockData';
+import { dashboardService } from '../services/dashboardService';
+
+declare global {
+  interface Window {
+    __EMERGENCY_EVENT_LOCK__?: boolean;
+  }
+}
+
 
 const Dashboard: React.FC = () => {
   const { user, setCurrentPage, setUser, incomingCalls, simulatedOccurrences, isAdminMode, toggleAdminMode } = useApp() as any;
@@ -220,18 +232,91 @@ const Dashboard: React.FC = () => {
     }
   };
 
-  // Usar ocorrências simuladas se existirem, senão usar mock data
-  const allOccurrences = simulatedOccurrences && simulatedOccurrences.length > 0 
-    ? [...simulatedOccurrences, ...mockOccurrences] 
-    : mockOccurrences;
-  
-  const recentOccurrences = allOccurrences.slice(0, 3);
+  // Busca ocorrências recentes do backend + escuta tempo real
+  const [recentOccurrences, setRecentOccurrences] = useState<any[]>([]);
+  const [socketOccurrence, setSocketOccurrence] = useState<any | null>(null);
+
+  useEffect(() => {
+    toast.success(" Sistema de notificação ativo!");
+  }, []);
+
+  useEffect(() => {
+    async function carregarOcorrenciasResumo() {
+      const data = await dashboardService.getOcorrenciasResumo();
+      console.log("Ocorrências resumo carregadas:", data);
+      setRecentOccurrences(Array.isArray(data) ? data.slice(0, 5) : []);
+    }
+
+    carregarOcorrenciasResumo();
+
+    // Conecta ao servidor WebSocket usando a URL centralizada
+    const socket = io(API_URL, { transports: ["websocket"] });
+
+    socket.on("connect", () => {
+      console.log("[SOCKET] Conectado ao Socket.IO:", socket.id);
+    });
+
+    // Recebe novas ocorrências em tempo real
+   // Recebe novas ocorrências em tempo real
+    socket.on("nova_ocorrencia", (novaOcorrencia) => {
+      console.log("[SOCKET] Nova ocorrência recebida:", novaOcorrencia);
+      
+      // Toast rápido de notificação
+      showEmergencyNotificationFromSocket(novaOcorrencia);
+
+      // Estrutura os dados para o evento
+      const eventData = {
+        id: novaOcorrencia.a02_id || novaOcorrencia.id,
+        a02_id: novaOcorrencia.a02_id || novaOcorrencia.id,
+        classificacao: novaOcorrencia.classificacao,
+        a02_prioridade: novaOcorrencia.a02_prioridade || novaOcorrencia.prioridade,
+        prioridade: novaOcorrencia.prioridade,
+        a02_descricao: novaOcorrencia.a02_descricao || novaOcorrencia.descricao,
+        descricao: novaOcorrencia.descricao,
+        usuario_nome: novaOcorrencia.usuario_nome,
+        local_nome: novaOcorrencia.local_nome,
+        a02_data_abertura: novaOcorrencia.a02_data_abertura || novaOcorrencia.data_abertura,
+        data_abertura: novaOcorrencia.data_abertura,
+        sintomas: novaOcorrencia.sintomas || [],
+        attemptedRespondersIds: novaOcorrencia.attemptedRespondersIds || [],
+      };
+
+      console.log("[SOCKET] Dados estruturados para evento:", eventData);
+
+      // Dispara o evento customizado
+      console.log("[SOCKET] Disparando evento abrirNotificacaoEmergencia");
+      const event = new CustomEvent("abrirNotificacaoEmergencia", { 
+        detail: eventData 
+      });
+      window.dispatchEvent(event);
+
+      // Atualiza a lista de ocorrências recentes
+      setRecentOccurrences((prev) => [novaOcorrencia, ...prev].slice(0, 5));
+    });
+
+
+
+
+    socket.on("disconnect", () => {
+      console.log("[SOCKET] Desconectado do Socket.IO");
+    });
+
+    //  Cleanup
+    return () => {
+      socket.disconnect();
+    };
+
+  }, []);
+
+  useEffect(() => {
+    console.log("Renderizando ocorrências:", recentOccurrences);
+  }, [recentOccurrences]);
+
+
+  console.log("Renderizando ocorrências:", recentOccurrences);
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Notificações de Chamados */}
-      <EmergencyCallNotification />
-      
       {/* Mobile Navigation */}
       <MobileNav />
       
@@ -332,7 +417,7 @@ const Dashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-xl lg:text-2xl font-semibold text-slate-900">
-                  {allOccurrences.filter(o => ['aberto', 'triagem', 'em_atendimento', 'a_caminho', 'no_local'].includes(o.status)).length}
+                  {recentOccurrences.filter(o => ['aberta', 'em_triagem', 'em_andamento'].includes(o.situacao || '')).length}
                 </div>
                 <p className="text-[10px] lg:text-xs text-slate-600 mt-1">
                   Aguardando atendimento
@@ -347,7 +432,7 @@ const Dashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-xl lg:text-2xl font-semibold text-red-600">
-                  {allOccurrences.filter(o => o.type === 'emergencia' && o.status !== 'concluido').length}
+                  {recentOccurrences.filter(o => o.tipo_ocorrencia?.toLowerCase().includes('emerg') && o.situacao !== 'finalizada').length}
                 </div>
                 <p className="text-[10px] lg:text-xs text-slate-600 mt-1">
                   Alta prioridade
@@ -362,7 +447,7 @@ const Dashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-xl lg:text-2xl font-semibold text-blue-600">
-                  {allOccurrences.filter(o => ['em_atendimento', 'no_local'].includes(o.status)).length}
+                  {recentOccurrences.filter(o => ['em_atendimento', 'no_local'].includes(o.a02_status)).length}
                 </div>
                 <p className="text-[10px] lg:text-xs text-slate-600 mt-1">
                   Socorristas ativos
@@ -377,7 +462,7 @@ const Dashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-xl lg:text-2xl font-semibold text-green-600">
-                  {allOccurrences.filter(o => o.status === 'concluido').length}
+                  {recentOccurrences.filter(o => o.a02_status === 'concluido').length}
                 </div>
                 <p className="text-[10px] lg:text-xs text-slate-600 mt-1">
                   Atendimentos finalizados
@@ -422,52 +507,109 @@ const Dashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentOccurrences.map((occurrence) => (
-                  <div key={occurrence.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg border border-slate-200">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <Badge className={`${getTypeColor(occurrence.type)} border text-xs px-2 py-1`}>
-                          {occurrence.type.toUpperCase()}
-                        </Badge>
-                        <Badge className={`${getPriorityColor(occurrence.priority)} border text-xs px-2 py-1`}>
-                          {occurrence.priority.toUpperCase()}
-                        </Badge>
-                        <Badge className={`${getStatusColor(occurrence.status)} border text-xs px-2 py-1`}>
-                          {getStatusLabel(occurrence.status)}
-                        </Badge>
-                        {occurrence.id.startsWith('sim-') && (
-                          <Badge className="bg-blue-100 text-blue-700 text-xs px-2 py-1">
-                            SIMULADO
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-slate-900 font-medium mb-1">
-                        {occurrence.symptoms.map(symptom => symptomLabels[symptom]).join(', ')}
-                      </p>
-                      <div className="flex items-center gap-4 text-xs text-slate-600">
-                        <span className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
-                          {occurrence.location?.name || 'Local não informado'}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Users className="w-3 h-3" />
-                          {occurrence.user.name}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-slate-500 mb-1">
-                        {new Date(occurrence.createdAt).toLocaleTimeString('pt-BR', {
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </p>
-                      <p className="text-xs font-medium text-slate-700">
-                        {Math.floor((Date.now() - new Date(occurrence.createdAt).getTime()) / 60000)}min atrás
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                
+          {Array.isArray(recentOccurrences) && recentOccurrences.map((occurrence: any) => (
+          <div
+            key={occurrence.a02_id}
+            className="p-4 bg-slate-50 rounded-lg border border-slate-200 shadow-sm hover:shadow-md transition-all"
+          >
+            {/* Linha de badges (tipo / prioridade / status) */}
+            <div className="flex items-center gap-2 mb-3">
+            {/* Classificação (urgência / emergência) */}
+            <Badge
+              className={`${
+                !occurrence.classificacao
+                  ? 'bg-slate-400 text-white'
+                  : occurrence.classificacao?.toLowerCase() === 'emergencia'
+                  ? 'bg-red-600 text-white'
+                  : 'bg-orange-500 text-white'
+              } text-xs font-semibold px-3 py-1 uppercase tracking-wide`}
+            >
+              {(occurrence.classificacao || 'DESCONHECIDO').toUpperCase()}
+            </Badge>
+
+              {/* Prioridade */}
+              <Badge
+                className={`${
+                  !occurrence.a02_prioridade
+                    ? 'bg-slate-400 text-white'
+                    : occurrence.a02_prioridade === 'alta'
+                    ? 'bg-red-100 text-red-700 border-red-200'
+                    : occurrence.a02_prioridade === 'media'
+                    ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                    : occurrence.a02_prioridade === 'baixa'
+                    ? 'bg-green-100 text-green-700 border-green-200'
+                    : 'bg-slate-400 text-white'
+                } border text-xs font-medium px-3 py-1`}
+              >
+                {(occurrence.a02_prioridade || 'INDEFINIDA').toUpperCase()}
+              </Badge>
+
+
+              {/* Situação */}
+              <Badge
+                className={`${
+                  !occurrence.situacao
+                    ? 'bg-slate-400 text-white'
+                    : occurrence.situacao === 'aberta'
+                    ? 'bg-blue-100 text-blue-700 border-blue-200'
+                    : occurrence.situacao === 'em_triagem'
+                    ? 'bg-yellow-100 text-yellow-700 border-yellow-200'
+                    : occurrence.situacao === 'em_andamento'
+                    ? 'bg-orange-100 text-orange-700 border-orange-200'
+                    : occurrence.situacao === 'finalizada'
+                    ? 'bg-green-100 text-green-700 border-green-200'
+                    : occurrence.situacao === 'cancelada'
+                    ? 'bg-slate-300 text-slate-700 border-slate-400'
+                    : 'bg-slate-400 text-white'
+                } border text-xs font-medium px-3 py-1`}
+              >
+                {(occurrence.situacao || 'DESCONHECIDO')
+                  .replace('_', ' ')
+                  .replace(/\b\w/g, (l: string) => l.toUpperCase())}
+              </Badge>
+            </div>
+
+            {/* Tipo de situação (ex: Lesões, Traumas e Sangramentos) */}
+            <p className="text-slate-900 font-semibold mb-1 text-[15px] leading-snug">
+              {occurrence.tipo_ocorrencia || "Tipo não informado"}
+            </p>
+
+            {/* Descrição do chamado */}
+            <p className="text-slate-700 text-sm mb-3">
+              {occurrence.a02_descricao || "Sem descrição"}
+            </p>
+
+            {/* Linha inferior: local + usuário + hora */}
+            <div className="flex justify-between items-center text-xs text-slate-600">
+              <div className="flex items-center gap-4">
+                <span className="flex items-center gap-1">
+                  <MapPin className="w-3 h-3 text-slate-500" />
+                  {occurrence.local_nome || "Local não informado"}
+                </span>
+                <span className="flex items-center gap-1">
+                  <Users className="w-3 h-3 text-slate-500" />
+                  {occurrence.usuario_nome || "Usuário não identificado"}
+                </span>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-slate-500">
+                  {new Date(occurrence.a02_data_abertura).toLocaleTimeString("pt-BR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+                <p className="text-xs font-medium text-slate-700">
+                  {Math.floor(
+                    (Date.now() - new Date(occurrence.a02_data_abertura).getTime()) / 60000
+                  )}min atrás
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+
+
                 {recentOccurrences.length === 0 && (
                   <div className="text-center py-8 text-slate-500">
                     <CheckCircle className="w-12 h-12 mx-auto mb-3 text-green-500" />

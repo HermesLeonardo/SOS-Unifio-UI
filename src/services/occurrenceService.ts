@@ -6,12 +6,13 @@ export const occurrenceService = {
     peopleCount: number,
     occurrenceType: number,
     description: string,
-    locationDescription: string
+    locationDescription: string,
+    prioridade?: string
   ) => {
     return apiFetch("ocorrencias", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json", // 🔹 obrigatório
+        "Content-Type": "application/json", 
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
       body: JSON.stringify({
@@ -20,12 +21,23 @@ export const occurrenceService = {
         occurrenceType,
         description,
         locationDescription,
+        prioridade,
       }),
     });
   },
 
   getById: async (id: number) => {
     return apiFetch(`ocorrencias/${id}`, {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+  },
+
+  getRecentes: async () => {
+    return apiFetch("ocorrencias/recentes", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

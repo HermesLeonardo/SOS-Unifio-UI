@@ -9,3 +9,4 @@
 
   Run `npm run dev` to start the development server.
   
+  run `npm install socket.io-client` tmb

@@ -21,9 +21,14 @@ import {
   UserPlus,
   RotateCcw
 } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from "sonner";
 
-const EmergencyCallNotification: React.FC = () => {
+interface EmergencyCallNotificationProps {
+  occurrence?: any;
+  onClose?: () => void;
+}
+
+function EmergencyCallNotification({ occurrence: externalOccurrence, onClose }: EmergencyCallNotificationProps) {
   const { user, incomingCalls, acceptCall, rejectCall, handleCallTimeout, setActiveOccurrence, setCurrentPage } = useApp() as any;
   const [currentCall, setCurrentCall] = useState<any>(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -33,6 +38,63 @@ const EmergencyCallNotification: React.FC = () => {
   const [shouldShowToast, setShouldShowToast] = useState(false);
   const [toastData, setToastData] = useState<any>(null);
   const [hasTimedOut, setHasTimedOut] = useState(false);
+
+ // Escuta global de eventos do socket (vindo do Dashboard)
+  useEffect(() => {
+    const handleExternalNotification = (e: any) => {
+      const data = e.detail;
+      if (!data) {
+        console.log("[EMERGENCY] Evento sem dados");
+        return;
+      }
+
+      console.log("[EMERGENCY] handleExternalNotification acionado", data);
+
+      // Evita reabrir o mesmo chamado se já estiver visível
+      if (currentCall?.id === data.id && isVisible) {
+        console.log("[EMERGENCY] Chamado já está sendo exibido");
+        return;
+      }
+
+      // Estrutura o chamado conforme esperado pelo componente
+      const newCall = {
+        id: data.id || data.a02_id,
+        occurrence: {
+          id: String(data.id || data.a02_id),
+          type: data.classificacao || "emergencia",
+          priority: data.a02_prioridade || data.prioridade || "alta",
+          description: data.a02_descricao || data.descricao || "Sem descrição",
+          peopleCount: "2-3",
+          user: {
+            name: data.usuario_nome || "Usuário",
+            role: "aluno",
+            email: "usuario@unifio.edu.br",
+          },
+          location: { name: data.local_nome || "Local não informado" },
+          createdAt: data.a02_data_abertura || data.data_abertura || new Date().toISOString(),
+          symptoms: data.sintomas || [],
+        },
+        attemptedRespondersIds: data.attemptedRespondersIds || [],
+      };
+
+      console.log("[EMERGENCY] Configurando novo chamado:", newCall);
+
+      setCurrentCall(newCall);
+      setIsVisible(true);
+      setIsMinimized(false);
+      setIsPulsing(true);
+      setTimeRemaining(90);
+      setHasTimedOut(false);
+    };
+
+    console.log("[EMERGENCY] Registrando listener de notificação");
+    window.addEventListener("abrirNotificacaoEmergencia", handleExternalNotification);
+
+    return () => {
+      console.log("[EMERGENCY] Removendo listener de notificação");
+      window.removeEventListener("abrirNotificacaoEmergencia", handleExternalNotification);
+    };
+  }, [currentCall, isVisible]); 
 
   // Mostrar notificação quando houver novos chamados
   useEffect(() => {
@@ -50,11 +112,11 @@ const EmergencyCallNotification: React.FC = () => {
         setToastData({
           name: latestCall.occurrence.user.name,
           type: latestCall.occurrence.type.toUpperCase(),
-          peopleCount: peopleCountLabels[latestCall.occurrence.peopleCount]
+          peopleCount: peopleCountLabels[latestCall.occurrence.peopleCount as keyof typeof peopleCountLabels]
         });
         setShouldShowToast(true);
       }
-    } else if (incomingCalls?.length === 0) {
+    } else if (incomingCalls?.length === 0 && !currentCall) {
       setIsVisible(false);
       setCurrentCall(null);
       setIsMinimized(false);
@@ -98,9 +160,8 @@ const EmergencyCallNotification: React.FC = () => {
   // Efeito separado para lidar com timeout
   useEffect(() => {
     if (timeRemaining === 0 && isVisible && currentCall && !hasTimedOut) {
-      setHasTimedOut(true); // Marcar como processado
-      
-      // Executar timeout em um macrotask para evitar setState durante render
+      setHasTimedOut(true);
+
       setTimeout(() => {
         if (handleCallTimeout) {
           handleCallTimeout(currentCall.id);
@@ -109,14 +170,16 @@ const EmergencyCallNotification: React.FC = () => {
           description: 'O chamado foi redirecionado para outro socorrista/colaborador.',
           duration: 5000,
         });
-        // Fechar notificação
-        setIsVisible(false);
-        setCurrentCall(null);
-        setIsMinimized(false);
-        setIsPulsing(false);
+
+        // 🔧 COMENTAR TEMPORARIAMENTE:
+        // setIsVisible(false);
+        // setCurrentCall(null);
+        // setIsMinimized(false);
+        // setIsPulsing(false);
       }, 0);
     }
   }, [timeRemaining, isVisible, currentCall, hasTimedOut, handleCallTimeout]);
+
 
   const handleAccept = () => {
     if (currentCall) {
@@ -189,9 +252,23 @@ const EmergencyCallNotification: React.FC = () => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  if (!isVisible || !currentCall || (user?.role !== 'socorrista' && user?.role !== 'professor' && user?.role !== 'colaborador')) {
+  console.log("[EMERGENCY] Render check", {
+    isVisible,
+    hasCurrentCall: !!currentCall,
+    currentCall,
+    userRole: user?.role
+  });
+
+
+  if (isVisible && currentCall) {
+    console.log("[EMERGENCY] Exibindo modal de emergência:", currentCall);
+  }
+
+  console.log("[EMERGENCY] Render check", { isVisible, hasCurrentCall: !!currentCall, currentCall, userRole: user?.role });
+  if (!isVisible || !currentCall) {
     return null;
   }
+
 
   const { occurrence, attemptedRespondersIds } = currentCall;
   const isRedirected = attemptedRespondersIds && attemptedRespondersIds.length > 0;
@@ -258,7 +335,7 @@ const EmergencyCallNotification: React.FC = () => {
                       PRIORIDADE {occurrence.priority.toUpperCase()}
                     </Badge>
                     <Badge className="bg-white/20 text-white border-white/30 text-xs font-medium">
-                      {peopleCountLabels[occurrence.peopleCount].toUpperCase()}
+                      {peopleCountLabels[occurrence.peopleCount as keyof typeof peopleCountLabels].toUpperCase()}
                     </Badge>
                   </div>
                 </div>
@@ -274,7 +351,7 @@ const EmergencyCallNotification: React.FC = () => {
               <div className="flex justify-between items-center mt-3 pt-3 border-t border-white/20">
                 <div className="flex gap-2">
                   <Button
-                    onClick={(e) => {
+                    onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                       e.stopPropagation();
                       handleReject();
                     }}
@@ -285,7 +362,7 @@ const EmergencyCallNotification: React.FC = () => {
                     Rejeitar
                   </Button>
                   <Button
-                    onClick={(e) => {
+                    onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                       e.stopPropagation();
                       handleAccept();
                     }}
@@ -430,8 +507,7 @@ const EmergencyCallNotification: React.FC = () => {
               <div className="flex-1">
                 <h4 className="font-semibold text-slate-900 mb-1">Pessoas que Precisam de Atendimento</h4>
                 <p className="text-sm text-slate-600">
-                  {peopleCountLabels[occurrence.peopleCount]}
-                </p>
+                  {peopleCountLabels[occurrence.peopleCount as keyof typeof peopleCountLabels]} </p>
                 {(occurrence.peopleCount === '2-3' || occurrence.peopleCount === '3+') && (
                   <p className="text-xs text-orange-600 mt-1 font-medium">
                     ⚠️ Múltiplas pessoas envolvidas - recursos adicionais podem ser necessários
@@ -574,5 +650,13 @@ const EmergencyCallNotification: React.FC = () => {
     </div>
   );
 };
+
+// Função auxiliar para disparar notificação de emergência vinda do socket
+export function showEmergencyNotificationFromSocket(data: any) {
+  toast("Novo Chamado de Emergência!", {
+    description: `${data.usuario_nome} - ${data.classificacao?.toUpperCase() || "DESCONHECIDO"} - Prioridade ${data.prioridade?.toUpperCase() || "N/A"}`,
+    duration: 8000,
+  });
+}
 
 export default EmergencyCallNotification;

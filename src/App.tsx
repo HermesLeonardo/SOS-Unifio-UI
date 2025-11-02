@@ -11,6 +11,7 @@ import MyAssignmentsPage from './components/MyAssignmentsPage';
 import HistoryPage from './components/HistoryPage';
 import ActiveOccurrencesPage from './components/ActiveOccurrencesPage';
 import ReportsPage from './components/ReportsPage';
+import EmergencyCallNotification from "./components/EmergencyCallNotification";
 
 const AppRouter: React.FC = () => {
   const { currentPage, user, isAdminMode } = useApp() as any;
@@ -254,9 +255,22 @@ const AppRouter: React.FC = () => {
 export default function App() {
   return (
     <AppProvider>
-      <div className="min-h-screen bg-slate-50">
+      <FixedLayout />
+    </AppProvider>
+  );
+}
+
+
+function FixedLayout() {
+  const { user } = useApp() as any;
+
+  return (
+    <div className="relative min-h-screen bg-slate-50">
+      {/* Conteúdo principal */}
+      <div className="relative z-0">
         <AppRouter />
-        <Toaster 
+
+        <Toaster
           position="top-right"
           toastOptions={{
             duration: 4000,
@@ -269,6 +283,15 @@ export default function App() {
           }}
         />
       </div>
-    </AppProvider>
+
+      {/* Notificação global — renderizada para socorristas, professores e colaboradores */}
+      {(user?.role === 'socorrista' || user?.role === 'professor' || user?.role === 'colaborador') && (
+        <div className="fixed inset-0 z-[9999] pointer-events-none">
+          <div className="pointer-events-auto">
+            <EmergencyCallNotification />
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

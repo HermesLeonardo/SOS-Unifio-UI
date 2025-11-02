@@ -109,13 +109,17 @@ const NewOccurrencePageStudent: React.FC = () => {
 
       const tipoOcorrenciaId = tipoOcorrenciaMapping[selectedCategory] || 1;
 
+      const prioridade = classification?.priority || "indefinida";
+
       const result = await occurrenceService.abrirOcorrencia(
         Number(selectedLocationId),
         selectedPeopleCount === "1" ? 1 : selectedPeopleCount === "2-3" ? 2 : 3,
         tipoOcorrenciaId,
         symptomsDescription,
-        locationDescription
+        locationDescription,
+        prioridade
       );
+
       
 
       console.log("Ocorrência criada:", result);
