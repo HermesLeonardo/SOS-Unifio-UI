@@ -1,20 +1,21 @@
 import { apiFetch } from "./api";
 
 export const dashboardService = {
-  async getOcorrenciasResumo() {
+  async getDashboard() {
     try {
       const token = localStorage.getItem("token");
-      const data = await apiFetch("ocorrencias/resumoDash", {
+      const data = await apiFetch("dashboard", {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      console.log("Response dashboard:", data);
-      return Array.isArray(data) ? data : [];
+
+      console.log("Dashboard carregado:", data);
+      return data;
     } catch (error) {
-      console.error("Erro ao buscar resumo de ocorrências:", error);
-      return [];
+      console.error("Erro ao buscar dados do dashboard:", error);
+      return null;
     }
   },
 };

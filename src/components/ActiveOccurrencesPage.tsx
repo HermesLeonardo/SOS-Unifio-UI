@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
@@ -29,10 +29,50 @@ const ActiveOccurrencesPage: React.FC = () => {
   const [priorityFilter, setPriorityFilter] = useState<string>('all');
   const [selectedOccurrence, setSelectedOccurrence] = useState<any>(null);
 
-  // Combinar ocorrências simuladas com mock data
-  const allOccurrences = simulatedOccurrences && simulatedOccurrences.length > 0 
-    ? [...simulatedOccurrences, ...mockOccurrences] 
-    : mockOccurrences;
+  const [allOccurrences, setAllOccurrences] = useState<any[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const response = await fetch("http://localhost:5000/ocorrencias/ativas", {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`
+          }
+        });
+
+        const data = await response.json();
+
+        const mapped = data.map((o: any) => ({
+          id: String(o.id),
+          user: {
+            name: o.usuario,
+            email: "email@desconhecido.com",
+            role: "aluno",
+            ra: null
+          },
+          location: {
+            name: o.local
+          },
+          locationDescription: o.detalhe_local,
+          peopleCount: o.qtd_pessoas,
+          symptoms: o.descricao_sintoma ? [o.descricao_sintoma] : [],
+          status: o.situacao,
+          priority: o.prioridade,
+          createdAt: o.data_abertura,
+          description: o.descricao_sintoma
+        }));
+
+        setAllOccurrences(mapped);
+
+      } catch (error) {
+        console.error("Erro ao carregar ocorrências:", error);
+      }
+    };
+
+    load();
+  }, []);
+
+
 
   // Filtrar apenas ocorrências ativas (não concluídas)
   const activeOccurrences = allOccurrences.filter(occurrence => 
@@ -283,14 +323,14 @@ const ActiveOccurrencesPage: React.FC = () => {
                           {occurrence.peopleCount === '1' && <User className="w-3 h-3 text-slate-400" />}
                           {occurrence.peopleCount === '2-3' && <Users className="w-3 h-3 text-slate-400" />}
                           {occurrence.peopleCount === '3+' && <UserPlus className="w-3 h-3 text-slate-400" />}
-                          <span className="truncate">{peopleCountLabels[occurrence.peopleCount]}</span>
+                          <span className="truncate">{peopleCountLabels[String(occurrence.peopleCount) as keyof typeof peopleCountLabels]}</span>
                         </div>
                       </div>
 
                       <div className="mt-2 flex flex-wrap gap-1">
-                        {occurrence.symptoms.slice(0, 2).map(symptom => (
+                        {occurrence.symptoms.slice(0, 2).map((symptom: string) => (
                           <Badge key={symptom} variant="secondary" className="text-xs">
-                            {symptomLabels[symptom]}
+                            {symptomLabels[symptom as keyof typeof symptomLabels]}
                           </Badge>
                         ))}
                         {occurrence.symptoms.length > 2 && (
@@ -390,7 +430,7 @@ const ActiveOccurrencesPage: React.FC = () => {
                             {selectedOccurrence.peopleCount === '1' && <User className="w-4 h-4 text-slate-600" />}
                             {selectedOccurrence.peopleCount === '2-3' && <Users className="w-4 h-4 text-slate-600" />}
                             {selectedOccurrence.peopleCount === '3+' && <UserPlus className="w-4 h-4 text-slate-600" />}
-                            <span>{peopleCountLabels[selectedOccurrence.peopleCount]}</span>
+                            <span>{peopleCountLabels[selectedOccurrence.peopleCount as keyof typeof peopleCountLabels]}</span>
                           </div>
                           {(selectedOccurrence.peopleCount === '2-3' || selectedOccurrence.peopleCount === '3+') && (
                             <p className="text-sm text-orange-600 ml-6 font-medium">
@@ -408,7 +448,7 @@ const ActiveOccurrencesPage: React.FC = () => {
                     <div className="flex flex-wrap gap-2">
                       {selectedOccurrence.symptoms.map((symptom: string) => (
                         <Badge key={symptom} variant="secondary">
-                          {symptomLabels[symptom]}
+                          {symptomLabels[symptom as keyof typeof symptomLabels]}
                         </Badge>
                       ))}
                     </div>

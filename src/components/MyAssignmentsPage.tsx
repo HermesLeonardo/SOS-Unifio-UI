@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { useApp } from '../contexts/AppContext';
-import { mockOccurrences, symptomLabels, peopleCountLabels } from '../data/mockData';
+import { symptomLabels, peopleCountLabels } from '../data/mockData';
 import TestCallButton from './TestCallButton';
 import EmergencyCallNotification from './EmergencyCallNotification';
 import CallCompletionForm from './CallCompletionForm';
+import { occurrenceService } from "../services/occurrenceService";
 import { 
   ArrowLeft, 
   Search,
@@ -31,6 +32,7 @@ import {
   ClipboardCheck,
   UserPlus
 } from 'lucide-react';
+import { PredefinedSymptom } from '../types';
 
 const MyAssignmentsPage: React.FC = () => {
   const { user, setCurrentPage, simulatedOccurrences } = useApp() as any;
@@ -41,15 +43,12 @@ const MyAssignmentsPage: React.FC = () => {
   const [showCompletionForm, setShowCompletionForm] = useState(false);
 
   // Combinar ocorrências simuladas com mock data
-  const allOccurrences = simulatedOccurrences && simulatedOccurrences.length > 0 
-    ? [...simulatedOccurrences, ...mockOccurrences] 
-    : mockOccurrences;
+  const [allOccurrences, setAllOccurrences] = useState<BackendOccurrence[]>([]);
+
 
   // Filtrar ocorrências atribuídas ao socorrista atual
-  const myAssignments = allOccurrences.filter(occurrence => 
-    occurrence.assignedTo?.id === user?.id || 
-    occurrence.responders?.some(responder => responder.id === user?.id)
-  );
+  const myAssignments = allOccurrences;
+
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -89,6 +88,68 @@ const MyAssignmentsPage: React.FC = () => {
     }
   };
 
+  type BackendOccurrence = {
+    id: string;
+    status: string;
+    priority: string;
+    createdAt: string;
+    description: string;
+
+    user: {
+      name: string;
+      email: string;
+      role: string;
+      ra?: string | null;
+    };
+
+    location: {
+      name: string;
+    };
+
+    locationDescription: string;
+    peopleCount: "1" | "2-3" | "3+";  
+    symptoms: PredefinedSymptom[];
+  };
+
+
+  useEffect(() => {
+    async function carregarMinhasOcorrencias() {
+      try {
+        const data = await occurrenceService.getMinhas();
+
+        // Mapeamento do backend → front
+        const mapped = data.map((o: any) => ({
+          id: String(o.a02_id),
+          status: o.situacao,                       // aberta, em_triagem, em_andamento, finalizada
+          priority: o.a02_prioridade,              // alta, média, baixa
+          createdAt: o.data_abertura,
+          description: o.descricao_sintoma,
+          
+          user: {
+            name: o.usuario,
+            email: "email@desconhecido.com",       // se quiser, depois puxamos do backend
+            role: o.tipo_usuario,
+            ra: null,                              // só se for aluno
+          },
+
+          location: {
+            name: o.local,
+          },
+
+          locationDescription: o.Detalhe_Local_User || "",
+          peopleCount: String(o.qtd_pessoas),
+          symptoms: [],                             // futuro: puxar sintomas separados
+        }));
+
+        setAllOccurrences(mapped);
+      } catch (e) {
+        console.error("Erro ao carregar minhas ocorrências:", e);
+      }
+    }
+
+    carregarMinhasOcorrencias();
+  }, []);
+
   const getTimeElapsed = (createdAt: string) => {
     const now = new Date();
     const created = new Date(createdAt);
@@ -105,9 +166,11 @@ const MyAssignmentsPage: React.FC = () => {
   };
 
   const filteredAssignments = myAssignments.filter(assignment => {
-    const matchesSearch = assignment.user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      assignment.location?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      assignment.id.toLowerCase().includes(searchTerm.toLowerCase());
+  const matchesSearch =
+    assignment.user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    assignment.location?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    assignment.id?.toLowerCase().includes(searchTerm.toLowerCase());
+
     
     const matchesStatus = statusFilter === 'all' || assignment.status === statusFilter;
     const matchesPriority = priorityFilter === 'all' || assignment.priority === priorityFilter;
@@ -448,7 +511,7 @@ const MyAssignmentsPage: React.FC = () => {
                       {selectedAssignment.peopleCount === '1' && <User className="w-5 h-5 text-slate-600" />}
                       {selectedAssignment.peopleCount === '2-3' && <Users className="w-5 h-5 text-slate-600" />}
                       {selectedAssignment.peopleCount === '3+' && <UserPlus className="w-5 h-5 text-slate-600" />}
-                      <span className="font-medium">{peopleCountLabels[selectedAssignment.peopleCount]}</span>
+                      <span className="font-medium">{peopleCountLabels[selectedAssignment.peopleCount as keyof typeof peopleCountLabels]}</span>
                     </div>
                     {(selectedAssignment.peopleCount === '2-3' || selectedAssignment.peopleCount === '3+') && (
                       <div className="bg-orange-50 border border-orange-200 rounded-lg p-3">
@@ -465,7 +528,7 @@ const MyAssignmentsPage: React.FC = () => {
                     <div className="flex flex-wrap gap-2">
                       {selectedAssignment.symptoms.map((symptom: string) => (
                         <Badge key={symptom} variant="secondary">
-                          {symptomLabels[symptom]}
+                          {symptomLabels[symptom as keyof typeof symptomLabels]}
                         </Badge>
                       ))}
                     </div>

@@ -28,7 +28,6 @@ import {
   Heart,
   UserCog
 } from 'lucide-react';
-import { mockOccurrences, symptomLabels } from '../data/mockData';
 import { dashboardService } from '../services/dashboardService';
 
 declare global {
@@ -46,50 +45,6 @@ const Dashboard: React.FC = () => {
   const handleLogout = () => {
     setUser(null);
     setCurrentPage('login');
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'aberto': return 'bg-red-100 text-red-700 border-red-200';
-      case 'triagem': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'em_atendimento': return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'a_caminho': return 'bg-orange-100 text-orange-700 border-orange-200';
-      case 'no_local': return 'bg-purple-100 text-purple-700 border-purple-200';
-      case 'concluido': return 'bg-green-100 text-green-700 border-green-200';
-      case 'cancelado': return 'bg-slate-100 text-slate-700 border-slate-200';
-      default: return 'bg-slate-100 text-slate-700 border-slate-200';
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'aberto': return 'Aberto';
-      case 'triagem': return 'Em Triagem';
-      case 'em_atendimento': return 'Em Atendimento';
-      case 'a_caminho': return 'A Caminho';
-      case 'no_local': return 'No Local';
-      case 'concluido': return 'Concluído';
-      case 'cancelado': return 'Cancelado';
-      default: return status;
-    }
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'critica': return 'bg-red-100 text-red-700 border-red-200';
-      case 'alta': return 'bg-red-100 text-red-700 border-red-200';
-      case 'media': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
-      case 'baixa': return 'bg-green-100 text-green-700 border-green-200';
-      default: return 'bg-slate-100 text-slate-700 border-slate-200';
-    }
-  };
-
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'emergencia': return 'bg-emergency-critical text-white';
-      case 'urgencia': return 'bg-emergency-urgent text-white';
-      default: return 'bg-slate-100 text-slate-700';
-    }
   };
 
   const getRoleColor = (role: string) => {
@@ -234,20 +189,51 @@ const Dashboard: React.FC = () => {
 
   // Busca ocorrências recentes do backend + escuta tempo real
   const [recentOccurrences, setRecentOccurrences] = useState<any[]>([]);
-  const [socketOccurrence, setSocketOccurrence] = useState<any | null>(null);
+  const [metrics, setMetrics] = useState({
+    ativos: 0,
+    emergencias: 0,
+    emAtendimento: 0,
+    concluidosHoje: 0,
+  });
+
+  // useEffect(() => {
+  //   toast.success(" Sistema de notificação ativo!");
+  // }, []);
 
   useEffect(() => {
-    toast.success(" Sistema de notificação ativo!");
-  }, []);
+    async function carregarDashboard() {
+      const data = await dashboardService.getDashboard();
 
-  useEffect(() => {
-    async function carregarOcorrenciasResumo() {
-      const data = await dashboardService.getOcorrenciasResumo();
-      console.log("Ocorrências resumo carregadas:", data);
-      setRecentOccurrences(Array.isArray(data) ? data.slice(0, 5) : []);
+      if (!data) return;
+
+      setRecentOccurrences(
+        (data.recentes || []).map((o: any) => ({
+          a02_id: o.a02_id,
+          classificacao: o.classificacao,
+          tipo_ocorrencia: o.tipo_ocorrencia,
+          a02_prioridade: o.a02_prioridade,
+          situacao: o.situacao,
+          usuario_nome: o.usuario_nome,
+          local_nome: o.local_nome,
+          a02_descricao: o.a02_descricao,
+          a02_data_abertura: o.a02_data_abertura
+        }))
+      );
+
+
+
+
+
+      setMetrics({
+        ativos: data.status.abertas,
+        emergencias: data.status.emergencias,
+        emAtendimento: data.status.em_andamento,
+        concluidosHoje: data.status.finalizadas, 
+      });
     }
 
-    carregarOcorrenciasResumo();
+    carregarDashboard();
+
 
     // Conecta ao servidor WebSocket usando a URL centralizada
     const socket = io(API_URL, { transports: ["websocket"] });
@@ -292,6 +278,11 @@ const Dashboard: React.FC = () => {
 
       // Atualiza a lista de ocorrências recentes
       setRecentOccurrences((prev) => [novaOcorrencia, ...prev].slice(0, 5));
+      setMetrics(prev => ({
+        ...prev,
+        ativos: prev.ativos + 1,
+      }));
+
     });
 
 
@@ -417,7 +408,7 @@ const Dashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-xl lg:text-2xl font-semibold text-slate-900">
-                  {recentOccurrences.filter(o => ['aberta', 'em_triagem', 'em_andamento'].includes(o.situacao || '')).length}
+                  {metrics.ativos}
                 </div>
                 <p className="text-[10px] lg:text-xs text-slate-600 mt-1">
                   Aguardando atendimento
@@ -432,7 +423,7 @@ const Dashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-xl lg:text-2xl font-semibold text-red-600">
-                  {recentOccurrences.filter(o => o.tipo_ocorrencia?.toLowerCase().includes('emerg') && o.situacao !== 'finalizada').length}
+                  {metrics.emergencias}
                 </div>
                 <p className="text-[10px] lg:text-xs text-slate-600 mt-1">
                   Alta prioridade
@@ -447,7 +438,7 @@ const Dashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-xl lg:text-2xl font-semibold text-blue-600">
-                  {recentOccurrences.filter(o => ['em_atendimento', 'no_local'].includes(o.a02_status)).length}
+                  {metrics.emAtendimento}
                 </div>
                 <p className="text-[10px] lg:text-xs text-slate-600 mt-1">
                   Socorristas ativos
@@ -462,7 +453,7 @@ const Dashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-xl lg:text-2xl font-semibold text-green-600">
-                  {recentOccurrences.filter(o => o.a02_status === 'concluido').length}
+                  {metrics.concluidosHoje}
                 </div>
                 <p className="text-[10px] lg:text-xs text-slate-600 mt-1">
                   Atendimentos finalizados

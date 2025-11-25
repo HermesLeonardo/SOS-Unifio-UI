@@ -313,7 +313,7 @@
     height: auto;
   }
 
-  button, input, select, optgroup, textarea {
+  button:not([role="tab"]), input,select,optgroup,textarea {
     font: inherit;
     font-feature-settings: inherit;
     font-variation-settings: inherit;
@@ -439,7 +439,7 @@
     display: none !important;
   }
 
-  * {
+  *:not([role="tab"]) {
     border-color: var(--border);
     outline-color: var(--ring);
   }
@@ -4570,4 +4570,16 @@ html {
     opacity: var(--tw-exit-opacity, 1);
     transform: translate3d(var(--tw-exit-translate-x, 0), var(--tw-exit-translate-y, 0), 0) scale3d(var(--tw-exit-scale, 1), var(--tw-exit-scale, 1), var(--tw-exit-scale, 1)) rotate(var(--tw-exit-rotate, 0));
   }
+}
+
+
+/* Corrige Tabs do Radix ignoradas pelos resets globais */
+[role="tab"][data-state="active"] {
+  background-color: var(--primary) !important;
+  color: white !important;
+}
+
+[role="tab"][data-state="inactive"] {
+  background-color: transparent !important;
+  color: var(--foreground) !important;
 }

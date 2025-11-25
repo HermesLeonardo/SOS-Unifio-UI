@@ -43,7 +43,7 @@ import {
   ArrowLeft,
   Database
 } from 'lucide-react';
-import { toast } from 'sonner@2.0.3';
+import { toast } from 'sonner';
 import StorageManager from './StorageManager';
 
 const AdminDashboard: React.FC = () => {
@@ -52,6 +52,8 @@ const AdminDashboard: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterRole, setFilterRole] = useState<string>('all');
   const [showAddUser, setShowAddUser] = useState(false);
+  const [settingsTab, setSettingsTab] = useState('general');
+
 
   // Mock data para demonstração
   const adminStats: AdminStats = {
@@ -243,29 +245,28 @@ const AdminDashboard: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="overview" className="flex items-center gap-2">
-              <BarChart3 className="w-4 h-4" />
+          <TabsList className="flex w-full justify-center gap-6 bg-slate-100 p-1 rounded-xl">
+            <TabsTrigger 
+              value="overview" 
+              className="px-6 py-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              <BarChart3 className="w-4 h-4 mr-2" />
               Visão Geral
             </TabsTrigger>
-            <TabsTrigger value="users" className="flex items-center gap-2">
-              <Users className="w-4 h-4" />
+
+            <TabsTrigger 
+              value="users"
+              className="px-6 py-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              <Users className="w-4 h-4 mr-2" />
               Usuários
             </TabsTrigger>
-            <TabsTrigger value="occurrences" className="flex items-center gap-2">
-              <Heart className="w-4 h-4" />
-              Ocorrências
-            </TabsTrigger>
-            <TabsTrigger value="reports" className="flex items-center gap-2">
-              <FileText className="w-4 h-4" />
-              Relatórios
-            </TabsTrigger>
-            <TabsTrigger value="storage" className="flex items-center gap-2">
-              <Database className="w-4 h-4" />
-              Armazenamento
-            </TabsTrigger>
-            <TabsTrigger value="settings" className="flex items-center gap-2">
-              <Settings className="w-4 h-4" />
+
+            <TabsTrigger 
+              value="settings"
+              className="px-6 py-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-sm"
+            >
+              <Settings className="w-4 h-4 mr-2" />
               Configurações
             </TabsTrigger>
           </TabsList>
@@ -652,14 +653,11 @@ const AdminDashboard: React.FC = () => {
               <p className="text-sm text-slate-600">Gerenciamento de parâmetros globais do SOS UNIFIO</p>
             </div>
 
-            <Tabs defaultValue="general" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-6">
+            <Tabs value={settingsTab} onValueChange={setSettingsTab} className="space-y-6">
+              <TabsList className="flex w-full justify-center gap-6 bg-slate-100 p-1 rounded-xl">
                 <TabsTrigger value="general">Geral</TabsTrigger>
                 <TabsTrigger value="emergency">Emergência</TabsTrigger>
-                <TabsTrigger value="notifications">Notificações</TabsTrigger>
-                <TabsTrigger value="security">Segurança</TabsTrigger>
                 <TabsTrigger value="locations">Localizações</TabsTrigger>
-                <TabsTrigger value="maintenance">Manutenção</TabsTrigger>
               </TabsList>
 
               {/* Configurações Gerais */}
@@ -802,166 +800,67 @@ const AdminDashboard: React.FC = () => {
                 </Card>
               </TabsContent>
 
-              {/* Configurações de Notificações */}
-              <TabsContent value="notifications" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Notificações por Email</CardTitle>
-                    <CardDescription>Configuração de alertas por email</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="smtp-server">Servidor SMTP</Label>
-                        <Input id="smtp-server" defaultValue="smtp.unifio.edu.br" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="smtp-port">Porta SMTP</Label>
-                        <Input id="smtp-port" type="number" defaultValue="587" />
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-2">
-                        <input type="checkbox" id="email-critical" defaultChecked={true} />
-                        <Label htmlFor="email-critical">Email para emergências críticas</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <input type="checkbox" id="email-reports" defaultChecked={false} />
-                        <Label htmlFor="email-reports">Email para relatórios diários</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <input type="checkbox" id="email-maintenance" defaultChecked={true} />
-                        <Label htmlFor="email-maintenance">Email para manutenções do sistema</Label>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Notificações Push</CardTitle>
-                    <CardDescription>Configuração de notificações em tempo real</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-2">
-                        <input type="checkbox" id="push-socorristas" defaultChecked={true} />
-                        <Label htmlFor="push-socorristas">Push para socorristas em novos chamados</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <input type="checkbox" id="push-administradores" defaultChecked={true} />
-                        <Label htmlFor="push-administradores">Push para administradores em emergências</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <input type="checkbox" id="push-solicitante" defaultChecked={true} />
-                        <Label htmlFor="push-solicitante">Push para solicitante sobre status</Label>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {/* Configurações de Segurança */}
-              <TabsContent value="security" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Políticas de Senha</CardTitle>
-                    <CardDescription>Requisitos de segurança para senhas de usuários</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="min-password-length">Comprimento mínimo</Label>
-                        <Input id="min-password-length" type="number" defaultValue="8" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="password-expiry">Expiração (dias)</Label>
-                        <Input id="password-expiry" type="number" defaultValue="90" />
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-2">
-                        <input type="checkbox" id="require-uppercase" defaultChecked={true} />
-                        <Label htmlFor="require-uppercase">Exigir letras maiúsculas</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <input type="checkbox" id="require-numbers" defaultChecked={true} />
-                        <Label htmlFor="require-numbers">Exigir números</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <input type="checkbox" id="require-symbols" defaultChecked={false} />
-                        <Label htmlFor="require-symbols">Exigir símbolos especiais</Label>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Controle de Acesso</CardTitle>
-                    <CardDescription>Configurações de autenticação e autorização</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="max-login-attempts">Máx. tentativas de login</Label>
-                        <Input id="max-login-attempts" type="number" defaultValue="3" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="lockout-duration">Duração bloqueio (min)</Label>
-                        <Input id="lockout-duration" type="number" defaultValue="15" />
-                      </div>
-                    </div>
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-2">
-                        <input type="checkbox" id="force-password-change" defaultChecked={true} />
-                        <Label htmlFor="force-password-change">Forçar mudança de senha no primeiro login</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <input type="checkbox" id="audit-log" defaultChecked={true} />
-                        <Label htmlFor="audit-log">Manter log de auditoria</Label>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
               {/* Configurações de Localizações */}
               <TabsContent value="locations" className="space-y-4">
                 <Card>
                   <CardHeader>
                     <CardTitle>Locais do Campus</CardTitle>
-                    <CardDescription>Gerenciamento de prédios e salas</CardDescription>
+                    <CardDescription>Gerenciamento de prédios e salas da UNIFIO</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <Label>Locais Cadastrados</Label>
+                        <Label>Locais Cadastrados (18 locais)</Label>
                         <Button size="sm">
                           <Plus className="w-4 h-4 mr-2" />
                           Adicionar Local
                         </Button>
                       </div>
                       
+                      {/* Centrais de Aulas */}
                       <div className="border rounded-lg">
-                        <div className="p-3 bg-slate-50 border-b">
-                          <h4 className="font-medium">Prédio Principal</h4>
+                        <div className="p-3 bg-blue-50 border-b">
+                          <h4 className="font-semibold text-blue-900">Centrais de Aulas</h4>
                         </div>
                         <div className="p-3 space-y-2">
-                          <div className="flex justify-between items-center text-sm">
-                            <span>Ambulatório - Térreo</span>
+                          <div className="flex justify-between items-center text-sm py-1.5 hover:bg-slate-50 px-2 rounded">
+                            <span>Central de Aulas 1 <span className="text-slate-500">(Salas 101-116)</span></span>
                             <Button variant="ghost" size="sm">
                               <Edit className="w-4 h-4" />
                             </Button>
                           </div>
-                          <div className="flex justify-between items-center text-sm">
-                            <span>Recepção - Térreo</span>
+                          <div className="flex justify-between items-center text-sm py-1.5 hover:bg-slate-50 px-2 rounded">
+                            <span>Central de Aulas 2 <span className="text-slate-500">(Salas 201-218)</span></span>
                             <Button variant="ghost" size="sm">
                               <Edit className="w-4 h-4" />
                             </Button>
                           </div>
-                          <div className="flex justify-between items-center text-sm">
-                            <span>Laboratórios - 1º Andar</span>
+                          <div className="flex justify-between items-center text-sm py-1.5 hover:bg-slate-50 px-2 rounded">
+                            <span>Central de Aulas 3 <span className="text-slate-500">(Salas 301-311)</span></span>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <div className="flex justify-between items-center text-sm py-1.5 hover:bg-slate-50 px-2 rounded">
+                            <span>Central de Aulas 4 <span className="text-slate-500">(Salas 401-413)</span></span>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <div className="flex justify-between items-center text-sm py-1.5 hover:bg-slate-50 px-2 rounded">
+                            <span>Central de Aulas 5 <span className="text-slate-500">(Salas 501-516)</span></span>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <div className="flex justify-between items-center text-sm py-1.5 hover:bg-slate-50 px-2 rounded">
+                            <span>Central de Aulas 6 <span className="text-slate-500">(Bloco 6 Central de odonto)</span></span>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <div className="flex justify-between items-center text-sm py-1.5 hover:bg-slate-50 px-2 rounded">
+                            <span>Núcleo Tech Central 7 <span className="text-slate-500">(Prédio de tecnologia)</span></span>
                             <Button variant="ghost" size="sm">
                               <Edit className="w-4 h-4" />
                             </Button>
@@ -969,19 +868,92 @@ const AdminDashboard: React.FC = () => {
                         </div>
                       </div>
 
+                      {/* Áreas Acadêmicas e Administrativas */}
                       <div className="border rounded-lg">
-                        <div className="p-3 bg-slate-50 border-b">
-                          <h4 className="font-medium">Prédio de Esportes</h4>
+                        <div className="p-3 bg-purple-50 border-b">
+                          <h4 className="font-semibold text-purple-900">Áreas Acadêmicas e Administrativas</h4>
                         </div>
                         <div className="p-3 space-y-2">
-                          <div className="flex justify-between items-center text-sm">
-                            <span>Quadra Principal</span>
+                          <div className="flex justify-between items-center text-sm py-1.5 hover:bg-slate-50 px-2 rounded">
+                            <span>Anfiteatro</span>
                             <Button variant="ghost" size="sm">
                               <Edit className="w-4 h-4" />
                             </Button>
                           </div>
-                          <div className="flex justify-between items-center text-sm">
-                            <span>Vestiários</span>
+                          <div className="flex justify-between items-center text-sm py-1.5 hover:bg-slate-50 px-2 rounded">
+                            <span>Biblioteca</span>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <div className="flex justify-between items-center text-sm py-1.5 hover:bg-slate-50 px-2 rounded">
+                            <span>Centro de Convivência <span className="text-slate-500">(Auditórios + L01-L10)</span></span>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <div className="flex justify-between items-center text-sm py-1.5 hover:bg-slate-50 px-2 rounded">
+                            <span>Coordenação de Cursos</span>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <div className="flex justify-between items-center text-sm py-1.5 hover:bg-slate-50 px-2 rounded">
+                            <span>CSC Administrativo</span>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Laboratórios e Áreas Especiais */}
+                      <div className="border rounded-lg">
+                        <div className="p-3 bg-green-50 border-b">
+                          <h4 className="font-semibold text-green-900">Laboratórios e Áreas Especiais</h4>
+                        </div>
+                        <div className="p-3 space-y-2">
+                          <div className="flex justify-between items-center text-sm py-1.5 hover:bg-slate-50 px-2 rounded">
+                            <span>Laboratório de Solos</span>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <div className="flex justify-between items-center text-sm py-1.5 hover:bg-slate-50 px-2 rounded">
+                            <span>Hospital Veterinário</span>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Áreas de Convivência e Externas */}
+                      <div className="border rounded-lg">
+                        <div className="p-3 bg-orange-50 border-b">
+                          <h4 className="font-semibold text-orange-900">Áreas de Convivência e Externas</h4>
+                        </div>
+                        <div className="p-3 space-y-2">
+                          <div className="flex justify-between items-center text-sm py-1.5 hover:bg-slate-50 px-2 rounded">
+                            <span>Cantina</span>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <div className="flex justify-between items-center text-sm py-1.5 hover:bg-slate-50 px-2 rounded">
+                            <span>Giovanelli Express</span>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <div className="flex justify-between items-center text-sm py-1.5 hover:bg-slate-50 px-2 rounded">
+                            <span>Quadra Central</span>
+                            <Button variant="ghost" size="sm">
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <div className="flex justify-between items-center text-sm py-1.5 hover:bg-slate-50 px-2 rounded">
+                            <span>Estacionamento</span>
                             <Button variant="ghost" size="sm">
                               <Edit className="w-4 h-4" />
                             </Button>
@@ -1012,146 +984,6 @@ const AdminDashboard: React.FC = () => {
                     </div>
                   </CardContent>
                 </Card>
-              </TabsContent>
-
-              {/* Configurações de Manutenção */}
-              <TabsContent value="maintenance" className="space-y-4">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Status do Sistema</CardTitle>
-                    <CardDescription>Informações sobre o funcionamento atual</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="p-4 border rounded-lg">
-                        <div className="flex items-center gap-2 mb-2">
-                          <CheckCircle className="w-5 h-5 text-green-500" />
-                          <span className="font-medium">Sistema Online</span>
-                        </div>
-                        <p className="text-sm text-slate-600">Uptime: 99.8%</p>
-                      </div>
-                      <div className="p-4 border rounded-lg">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Activity className="w-5 h-5 text-blue-500" />
-                          <span className="font-medium">Performance</span>
-                        </div>
-                        <p className="text-sm text-slate-600">Resposta: 120ms</p>
-                      </div>
-                      <div className="p-4 border rounded-lg">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Building className="w-5 h-5 text-purple-500" />
-                          <span className="font-medium">Servidor</span>
-                        </div>
-                        <p className="text-sm text-slate-600">CPU: 15% | RAM: 4.2GB</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Backup e Manutenção</CardTitle>
-                    <CardDescription>Configurações de backup automático e manutenção</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="backup-frequency">Frequência de Backup</Label>
-                        <Select defaultValue="daily">
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="hourly">A cada hora</SelectItem>
-                            <SelectItem value="daily">Diário</SelectItem>
-                            <SelectItem value="weekly">Semanal</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="backup-retention">Retenção (dias)</Label>
-                        <Input id="backup-retention" type="number" defaultValue="30" />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-2">
-                        <input type="checkbox" id="auto-backup" defaultChecked={true} />
-                        <Label htmlFor="auto-backup">Backup automático ativado</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <input type="checkbox" id="maintenance-window" defaultChecked={true} />
-                        <Label htmlFor="maintenance-window">Janela de manutenção: 02:00 - 04:00</Label>
-                      </div>
-                    </div>
-
-                    <div className="pt-4 space-y-2">
-                      <div className="flex gap-2">
-                        <Button variant="outline">
-                          <Download className="w-4 h-4 mr-2" />
-                          Backup Manual
-                        </Button>
-                        <Button variant="outline">
-                          <Activity className="w-4 h-4 mr-2" />
-                          Teste do Sistema
-                        </Button>
-                      </div>
-                      <p className="text-xs text-slate-500">
-                        Último backup: hoje às 03:00 | Próximo backup: amanhã às 03:00
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Logs do Sistema</CardTitle>
-                    <CardDescription>Registros de atividade e erros</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="log-level">Nível de Log</Label>
-                        <Select defaultValue="info">
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="error">Apenas Erros</SelectItem>
-                            <SelectItem value="warn">Avisos e Erros</SelectItem>
-                            <SelectItem value="info">Informações</SelectItem>
-                            <SelectItem value="debug">Debug (Completo)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="log-retention">Retenção de Logs (dias)</Label>
-                        <Input id="log-retention" type="number" defaultValue="90" />
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <Button variant="outline">
-                        <FileText className="w-4 h-4 mr-2" />
-                        Ver Logs
-                      </Button>
-                      <Button variant="outline">
-                        <Download className="w-4 h-4 mr-2" />
-                        Exportar Logs
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              {/* Aba de Armazenamento */}
-              <TabsContent value="storage" className="space-y-6">
-                <StorageManager 
-                  onDataCleared={() => {
-                    // Callback quando dados forem limpos
-                    toast.info('Redirecionando para login...');
-                  }}
-                />
               </TabsContent>
 
               <div className="flex justify-end pt-6">

@@ -46,5 +46,26 @@ export const occurrenceService = {
     });
   },
 
+  getMinhas: async () => {
+    return apiFetch("ocorrencias/socorrista/minhas", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+  },
+
+  getAtivas: async () => {
+    return apiFetch("ocorrencias/ativas", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+    });
+  },
+
+
 
 };
