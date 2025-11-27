@@ -1,0 +1,67 @@
+/* Etapa 3: Sintomas */
+
+.symp-page { background:#f3f5f7; min-height:100vh; }
+
+.symp-main {
+  min-height: calc(100vh - 64px);
+  display: grid;
+  place-items: center;
+  padding: 12px 16px 24px;
+}
+
+.symp-center { width: 100%; max-width: 920px; }
+
+.symp-progress { width: 520px; max-width: 100%; margin: 6px auto 12px; }
+.symp-card     { width: 520px; max-width: 100%; margin: 0 auto; }
+
+/* topo */
+.symp-topbar{ display:flex; align-items:center; justify-content:flex-start; margin-bottom:8px; }
+.back-link{
+  display:inline-flex; align-items:center; gap:6px;
+  border:1px solid var(--border,#e5e7eb); background:#fff; color:#0f172a;
+  height:36px; padding:0 10px; border-radius:10px; cursor:pointer;
+}
+.back-link:hover{ background:#f8fafc; }
+
+/* header do card */
+.symp-head { margin-bottom: 12px; }
+.symp-title { display:flex; align-items:center; gap:8px; font-weight:700; color:#0f172a; }
+.symp-desc  { margin:6px 0 14px; color:var(--muted,#64748b); font-size:14px; }
+
+/* categorias (apenas blocos coloridos) */
+.cat-grid { display: flex; flex-direction: column; gap: 12px; margin-bottom: 16px; }
+.cat-btn{
+  width:100%;
+  border-radius:12px;
+  padding:14px 14px;
+  border:1px solid var(--border,#e5e7eb);
+  text-align:left;
+  cursor:pointer;
+  transition: box-shadow .15s, border-color .15s, transform .02s;
+}
+.cat-btn:hover{ transform: translateY(-1px); }
+.cat-btn.is-selected{ border-color: var(--primary,#0b55a6); box-shadow: 0 0 0 4px var(--ring,rgba(11,85,166,.25)); }
+.cat-title{ font-weight:700; }
+.cat-desc{ font-size:12px; color:var(--muted,#64748b); margin-top:2px; }
+
+/* cores suaves */
+.cat--red   { background: linear-gradient(0deg,#ffe4e6,#fff); border-color:#fecaca; }
+.cat--purple{ background: linear-gradient(0deg,#f3e8ff,#fff); border-color:#e9d5ff; }
+.cat--orange{ background: linear-gradient(0deg,#ffedd5,#fff); border-color:#fed7aa; }
+.cat--yellow{ background: linear-gradient(0deg,#fef9c3,#fff); border-color:#fde68a; }
+.cat--green { background: linear-gradient(0deg,#dcfce7,#fff); border-color:#bbf7d0; }
+
+/* parte de baixo (texto obrigatório) */
+.symp-bottom { margin-top: 6px; }
+.symp-label { font-weight:600; color:#0f172a; margin: 6px 0 8px; display:block; }
+.req{ color:#b42318; }
+.hint{ margin:6px 2px 0; font-size:12px; color:var(--muted,#64748b); }
+
+.symp-error { margin-top:8px; color:#b42318; font-size:13px; }
+
+.symp-actions{ margin-top: 14px; display:flex; justify-content:flex-end; }
+
+/* responsivo */
+@media (max-width: 520px){
+  .symp-progress, .symp-card { width: 100%; }
+}
