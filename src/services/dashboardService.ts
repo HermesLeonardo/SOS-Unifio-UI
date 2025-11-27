@@ -18,4 +18,22 @@ export const dashboardService = {
       return null;
     }
   },
+
+  async getHistorico() {
+    try {
+      const token = localStorage.getItem("token");
+      const data = await apiFetch("dashboard/historico", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      console.log("Histórico carregado:", data);
+      return data;
+    } catch (error) {
+      console.error("Erro ao buscar histórico de ocorrências:", error);
+      return [];
+    }
+  },
 };

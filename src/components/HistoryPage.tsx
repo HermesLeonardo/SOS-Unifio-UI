@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { useApp } from '../contexts/AppContext';
 import { mockOccurrences, symptomLabels } from '../data/mockData';
 import TestCallButton from './TestCallButton';
+import { dashboardService } from "../services/dashboardService";
+import { useEffect } from "react";
 import EmergencyCallNotification from './EmergencyCallNotification';
 import { 
   ArrowLeft, 
@@ -35,15 +37,50 @@ const HistoryPage: React.FC = () => {
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
 
   // Combinar ocorrências simuladas com mock data
-  const allOccurrences = simulatedOccurrences && simulatedOccurrences.length > 0 
-    ? [...simulatedOccurrences, ...mockOccurrences] 
-    : mockOccurrences;
+  const [history, setHistory] = useState<any[]>([]);
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        const data = await dashboardService.getHistorico();
+        console.log("Dados recebidos no front:", data);
+        setHistory(data || []);
+      } catch (error) {
+        console.error("Erro ao carregar histórico no front:", error);
+      }
+    };
+
+    loadHistory();
+  }, []);
+
+  const allOccurrences = history.map((o: any) => ({
+      id: String(o.a02_id),
+      user: {
+        name: o.usuario_nome || "Não informado",
+        email: "email@desconhecido.com"
+      },
+      location: {
+        name: o.local_nome || "Local não informado"
+      },
+      priority: o.a02_prioridade || "indefinida",
+      status: o.situacao || "desconhecido",
+      description: o.a02_descricao || "",
+      createdAt: o.a02_data_abertura,
+      symptoms: []
+  }));
+
+
+
 
   // Filtrar histórico de ocorrências do socorrista
-  const myHistory = allOccurrences.filter(occurrence => 
-    occurrence.assignedTo?.id === user?.id || 
-    occurrence.responders?.some(responder => responder.id === user?.id)
-  ).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const myHistory = allOccurrences
+    .filter(record => record.status === "finalizada")
+    .sort((a, b) =>
+      new Date(b.createdAt).getTime() -
+      new Date(a.createdAt).getTime()
+    );
+
+
+
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -105,10 +142,10 @@ const HistoryPage: React.FC = () => {
 
   // Estatísticas do histórico
   const totalAtendimentos = myHistory.length;
-  const atendimentosConcluidos = myHistory.filter(h => h.status === 'concluido').length;
+  const atendimentosConcluidos = myHistory.filter(h => h.status === 'finalizada').length;
   const tempoMedioResposta = '8.5'; // Simulado
   const atendimentosCriticos = myHistory.filter(h => h.priority === 'critica').length;
-
+ 
   return (
     <div className="min-h-screen bg-slate-50">
       {/* Notificações de Chamados */}
@@ -258,8 +295,8 @@ const HistoryPage: React.FC = () => {
                     <CardContent className="p-4">
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex gap-2">
-                          <Badge className={`${record.status === 'concluido' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-slate-100 text-slate-700 border-slate-200'} border text-xs`}>
-                            {record.status === 'concluido' ? 'Concluído' : 'Em Andamento'}
+                          <Badge className={`${record.status === 'finalizada' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-slate-100 text-slate-700 border-slate-200'} border text-xs`}>
+                            {record.status === 'finalizada' ? 'Concluído' : 'Em Andamento'}
                           </Badge>
                           <Badge className={`${getPriorityColor(record.priority)} border text-xs`}>
                             {record.priority.toUpperCase()}
@@ -316,8 +353,8 @@ const HistoryPage: React.FC = () => {
                       </p>
                     </div>
                     <div className="flex gap-2">
-                      <Badge className={`${selectedRecord.status === 'concluido' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-slate-100 text-slate-700 border-slate-200'} border`}>
-                        {selectedRecord.status === 'concluido' ? 'Concluído' : 'Em Andamento'}
+                      <Badge className={`${selectedRecord.status === 'finalizada' ? 'bg-green-100 text-green-700 border-green-200' : 'bg-slate-100 text-slate-700 border-slate-200'} border`}>
+                        {selectedRecord.status === 'finalizada' ? 'Concluído' : 'Em Andamento'}
                       </Badge>
                       <Badge className={`${getPriorityColor(selectedRecord.priority)} border`}>
                         PRIORIDADE {selectedRecord.priority.toUpperCase()}
